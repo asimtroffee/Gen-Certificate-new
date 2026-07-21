@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Teacher Certificate</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Material Symbols -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+  
+  <style>
+    :root {
+      --brand: #2563EB;
+      --brand-hover: #1D4ED8;
+      --bg: #F8FAFC;
+      --surface: #FFFFFF;
+      --text: #0F172A;
+      --text-muted: #64748B;
+      --border: #E2E8F0;
+      --radius: 12px;
+      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 32px;
+      width: 100%;
+      max-width: 400px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .header h1 {
+      margin: 0 0 8px 0;
+      font-size: 24px;
+      font-weight: 600;
+    }
+    .header p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+      font-size: 14px;
+    }
+    .form-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: var(--brand);
+    }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--brand);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.2s;
+      font-family: inherit;
+    }
+    .btn:hover {
+      background: var(--brand-hover);
+    }
+    .btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+    .spin {
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    
+    #status {
+      margin-top: 16px;
+      font-size: 14px;
+      text-align: center;
+      min-height: 20px;
+    }
+    .success { color: #16A34A; }
+    .error { color: #DC2626; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="header">
+      <h1>Your Certificate</h1>
+      <p>Enter your details to generate and download your personalized certificate.</p>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Full Name</label>
+      <input type="text" class="form-input" id="teacher-name" placeholder="e.g. Jane Doe">
+    </div>
+    <div class="form-group">
+      <label class="form-label">School Name</label>
+      <input type="text" class="form-input" id="school-name" placeholder="e.g. Lincoln High">
+    </div>
+    
+    <button class="btn" id="btn-download" onclick="generateCert()">
+      <span class="material-symbols-outlined" id="btn-icon">download</span>
+      <span id="btn-text">Download My Certificate</span>
+    </button>
+    
+    <div id="status"></div>
+  </div>
+
+  <script>
+    const API_BASE = 'https://gen-certificate-new.onrender.com';
+    
+    function getToken() {
+      const p = new URLSearchParams(window.location.search);
+      return p.get('t') || p.get('token');
+    }
+
+    async function generateCert() {
+      const token = getToken();
+      if (!token) {
+        setStatus('Invalid link. Missing token.', 'error');
+        return;
+      }
+      
+      const tName = document.getElementById('teacher-name').value.trim();
+      const sName = document.getElementById('school-name').value.trim();
+      
+      if (!tName || !sName) {
+        setStatus('Please fill in both fields.', 'error');
+        return;
+      }
+      
+      const btn = document.getElementById('btn-download');
+      const btnIcon = document.getElementById('btn-icon');
+      const btnText = document.getElementById('btn-text');
+      
+      btn.disabled = true;
+      btnIcon.textContent = 'progress_activity';
+      btnIcon.classList.add('spin');
+      btnText.textContent = 'Generating...';
+      setStatus('', '');
+      
+      try {
+        const res = await fetch(API_BASE + '/api/teacher-cert/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token: token,
+            teacher_name: tName,
+            school_name: sName
+          })
+        });
+        
+        const data = await res.json();
+        
+        if (!res.ok) {
+          throw new Error(data.detail || 'Failed to generate certificate');
+        }
+        
+        setStatus('Certificate generated successfully!', 'success');
+        
+        // Trigger download
+        const a = document.createElement('a');
+        a.href = data.download_url;
+        a.download = 'My_Certificate.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        
+      } catch (err) {
+        setStatus(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btnIcon.textContent = 'download';
+        btnIcon.classList.remove('spin');
+        btnText.textContent = 'Download My Certificate';
+      }
+    }
+    
+    function setStatus(msg, type) {
+      const el = document.getElementById('status');
+      el.textContent = msg;
+      el.className = type;
+    }
+  </script>
+</body>
+</html>

@@ -25,6 +25,7 @@ from .supabase_init import init_supabase, get_client
 from .admin import router as admin_router
 from .events_api import router as events_router
 from .teacher_api import router as teacher_router
+from .teacher_cert_api import router as teacher_cert_router
 
 env_path = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(env_path)
@@ -116,6 +117,7 @@ app.add_middleware(
 app.include_router(admin_router)
 app.include_router(events_router)
 app.include_router(teacher_router)
+app.include_router(teacher_cert_router)
 
 
 @app.get("/api/config")
