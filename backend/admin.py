@@ -321,6 +321,9 @@ async def create_magic_link(req: CreateLinkRequest):
 
     # Gather SMTP config
     smtp_cfg = _get_smtp_config(client)
+    raw_sender = smtp_cfg.get("sender_name", "")
+    email_only = raw_sender.split("<")[1].split(">")[0] if "<" in raw_sender else raw_sender
+    smtp_cfg["sender_name"] = f"{event_name} <{email_only}>"
 
     base_url = _get_public_url(client)
     link_url = f"{base_url}/teacher.html?t={token_val}"
@@ -402,6 +405,9 @@ async def resend_link(req: CreateLinkRequest):
     event_name = event_res.data[0]["name"]
 
     smtp_cfg = _get_smtp_config(client)
+    raw_sender = smtp_cfg.get("sender_name", "")
+    email_only = raw_sender.split("<")[1].split(">")[0] if "<" in raw_sender else raw_sender
+    smtp_cfg["sender_name"] = f"{event_name} <{email_only}>"
 
     base_url = _get_public_url(client)
     link_url = f"{base_url}/teacher.html?t={token_val}"
@@ -474,6 +480,10 @@ async def resend_event_links(req: ResendEventLinksRequest):
         return {"ok": True, "message": "No pending teachers to resend to."}
 
     smtp_cfg = _get_smtp_config(client)
+    raw_sender = smtp_cfg.get("sender_name", "")
+    email_only = raw_sender.split("<")[1].split(">")[0] if "<" in raw_sender else raw_sender
+    smtp_cfg["sender_name"] = f"{event_name} <{email_only}>"
+
     base_url = _get_public_url(client)
     subject = f"Reminder: Generate certificates for {event_name}"
 
