@@ -17,6 +17,21 @@ def _load_font(family: str, size: int) -> PILImageFont.FreeTypeFont:
     if not path.exists():
         path = _FONT_PATHS["Great Vibes"]
     return PILImageFont.truetype(str(path), size)
+def _fit_text_font(draw: ImageDraw.ImageDraw, text: str, font: PILImageFont.FreeTypeFont, max_width: float, min_size: int = 10, fallback_factory=None) -> PILImageFont.FreeTypeFont:
+    """Scale down the font size if the text exceeds max_width."""
+    text_width = draw.textlength(text, font=font)
+    if text_width <= max_width:
+        return font
+    
+    ratio = max_width / text_width
+    new_size = max(int(font.size * ratio), min_size)
+    
+    if fallback_factory:
+        return fallback_factory(new_size)
+    elif hasattr(font, 'path'):
+        return PILImageFont.truetype(font.path, new_size)
+    else:
+        return font
 
 
 def generate_certificate(
@@ -68,10 +83,16 @@ def generate_certificate(
             anchor_map = {"left": "lm", "center": "mm", "right": "rm"}
             anchor = anchor_map.get(align, "mm")
 
+            font_family = field.get("fontFamily", "Great Vibes")
             fnt = get_font(
-                field.get("fontFamily", "Great Vibes"),
+                font_family,
                 field.get("fontSize", 72),
             )
+            
+            # Prevent text from exceeding 85% of image width
+            max_w = img.width * 0.85
+            fnt = _fit_text_font(draw, text_val, fnt, max_w, fallback_factory=lambda size: get_font(font_family, size))
+
             draw.text(
                 (pixel_x, pixel_y),
                 text_val,
@@ -92,7 +113,12 @@ def generate_certificate(
         anchor_map = {"left": "lm", "center": "mm", "right": "rm"}
         anchor = anchor_map.get(align, "mm")
 
-        fnt = font or _load_font(config.get("fontFamily", "Great Vibes"), config.get("fontSize", 72))
+        font_family = config.get("fontFamily", "Great Vibes")
+        fnt = font or _load_font(font_family, config.get("fontSize", 72))
+
+        # Prevent text from exceeding 85% of image width
+        max_w = img.width * 0.85
+        fnt = _fit_text_font(draw, text_val, fnt, max_w, fallback_factory=lambda size: _load_font(font_family, size))
 
         draw.text(
             (px, py),
