@@ -200,6 +200,8 @@
 <script>
 'use strict';
 
+
+  const API_BASE = 'https://gen-certificate-new.onrender.com';
 /* ─── State ──────────────────────────────────────────────── */
 const token = new URLSearchParams(window.location.search).get('t');
 let eventFields = [];   // fields defined in the event config
@@ -226,7 +228,7 @@ async function init() {
   if (!token) { showError('No access token found in the URL. Please use the link from your email.'); return; }
 
   try {
-    const res = await fetch(`/api/teacher/link/${token}`);
+    const res = await fetch(`${API_BASE}/api/teacher/link/${token}`);
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || 'Invalid or expired link');
     if (data.used) {
@@ -440,7 +442,7 @@ async function startGeneration() {
   $('err-list').innerHTML = '';
 
   try {
-    const res = await fetch('/api/teacher/generate', {
+    const res = await fetch(API_BASE + '/api/teacher/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, records }),

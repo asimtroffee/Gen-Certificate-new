@@ -119,7 +119,9 @@
 <script>
   'use strict';
 
-  function toast(msg, type = 'info') {
+  
+  const API_BASE = 'https://gen-certificate-new.onrender.com';
+function toast(msg, type = 'info') {
     const icons = { success: 'check_circle', error: 'error' };
     const el = document.createElement('div');
     el.className = `toast toast-${type}`;
@@ -147,7 +149,7 @@
 
   async function loadTeachers() {
     try {
-      const res = await fetch(`/api/admin/events/${eventId}/teachers`);
+      const res = await fetch(`${API_BASE}/api/admin/events/${eventId}/teachers`);
       if (!res.ok) throw new Error('Failed to load teachers');
       const data = await res.json();
       const teachers = data.teachers || [];
@@ -195,7 +197,7 @@
     formData.append('file', file);
 
     try {
-      const res = await fetch(`/api/admin/events/${eventId}/teachers/upload`, {
+      const res = await fetch(`${API_BASE}/api/admin/events/${eventId}/teachers/upload`, {
         method: 'POST',
         body: formData
       });
@@ -224,7 +226,7 @@
     btn.innerHTML = '<span class="material-symbols-outlined spin">progress_activity</span>Sending...';
 
     try {
-      const res = await fetch('/api/admin/resend-event-links', {
+      const res = await fetch(API_BASE + '/api/admin/resend-event-links', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ event_id: eventId, custom_message: msg }),

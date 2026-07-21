@@ -486,6 +486,8 @@
 <script>
 'use strict';
 
+
+  const API_BASE = 'https://gen-certificate-new.onrender.com';
 /* =========================================================
    UTILITIES
    ========================================================= */
@@ -551,7 +553,7 @@ let allEvents = [];
 async function loadDashboard() {
   // Stats
   try {
-    const r = await fetch('/api/admin/stats');
+    const r = await fetch(API_BASE + '/api/admin/stats');
     if (r.ok) {
       const s = await r.json();
       document.getElementById('kpi-events').textContent      = s.total_events ?? '—';
@@ -563,7 +565,7 @@ async function loadDashboard() {
 
   // Events
   try {
-    const r = await fetch('/api/events');
+    const r = await fetch(API_BASE + '/api/events');
     if (!r.ok) throw new Error('Failed to load events');
     const data = await r.json();
     allEvents = data.events || [];
@@ -654,7 +656,7 @@ async function submitSendLink() {
   errEl.textContent = '';
 
   try {
-    const r = await fetch('/api/admin/link', {
+    const r = await fetch(API_BASE + '/api/admin/link', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ event_id: _linkEventId, teacher_name: name, teacher_email: email }),
@@ -689,7 +691,7 @@ async function confirmDelete() {
   btn.disabled = true;
   btn.textContent = 'Deleting…';
   try {
-    const r = await fetch(`/api/events/${_deleteEventId}`, { method: 'DELETE' });
+    const r = await fetch(`${API_BASE}/api/events/${_deleteEventId}`, { method: 'DELETE' });
     if (!r.ok) {
       let detail = 'Delete failed';
       try { const e = await r.json(); detail = e.detail || detail; } catch (_) {}
@@ -1063,7 +1065,7 @@ async function publishEvent() {
    ========================================================= */
 async function loadConfig() {
   try {
-    const r = await fetch('/api/admin/config');
+    const r = await fetch(API_BASE + '/api/admin/config');
     if (!r.ok) return;
     const data = await r.json();
     document.getElementById('cfg-sender-email').value    = data.sender_email    || '';
@@ -1092,7 +1094,7 @@ async function saveConfig() {
   try {
     for (const f of fields) {
       const val = document.getElementById(f.id).value.trim();
-      const r = await fetch('/api/admin/config', {
+      const r = await fetch(API_BASE + '/api/admin/config', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ key: f.key, value: val }),
