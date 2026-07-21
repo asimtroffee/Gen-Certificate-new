@@ -88,9 +88,16 @@
   </div>
 
   <div class="card" style="margin-bottom:24px;padding:20px;">
-    <div class="form-group" style="margin-bottom:0;">
-      <label class="form-label">Custom Email Message (Optional)</label>
-      <textarea class="form-input" id="email-message" rows="3" placeholder="Add a custom note to the magic link email..."></textarea>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label class="form-label">Email Template Style</label>
+      <select id="email-choice" class="form-input" onchange="toggleEmailChoice()">
+        <option value="default">Default System Template (3-step guide)</option>
+        <option value="custom">Custom Message Only</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin-bottom:0; display:none;" id="custom-msg-group">
+      <label class="form-label">Custom Email Message</label>
+      <textarea class="form-input" id="email-message" rows="4" placeholder="Type your custom email here. Use {name} for the teacher's name."></textarea>
     </div>
   </div>
 
@@ -145,6 +152,12 @@ function toast(msg, type = 'info') {
     document.getElementById('teachers-tbody').innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Event ID missing in URL.</td></tr>';
   } else {
     loadTeachers();
+  }
+
+  function toggleEmailChoice() {
+    const choice = document.getElementById('email-choice').value;
+    const msgGroup = document.getElementById('custom-msg-group');
+    msgGroup.style.display = choice === 'custom' ? 'block' : 'none';
   }
 
   async function loadTeachers() {
@@ -218,7 +231,13 @@ function toast(msg, type = 'info') {
   }
 
   async function handleResendAll() {
+    const choice = document.getElementById('email-choice').value;
     const msg = document.getElementById('email-message').value.trim();
+    if (choice === 'custom' && !msg) {
+      toast('Please enter a custom message', 'error');
+      return;
+    }
+
     if (!confirm('Are you sure you want to email all pending teachers?')) return;
     
     const btn = document.getElementById('btn-email-pending');
@@ -229,7 +248,7 @@ function toast(msg, type = 'info') {
       const res = await fetch(API_BASE + '/api/admin/resend-event-links', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ event_id: eventId, custom_message: msg }),
+        body: JSON.stringify({ event_id: eventId, custom_message: msg, email_choice: choice }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || 'Failed to send emails');
