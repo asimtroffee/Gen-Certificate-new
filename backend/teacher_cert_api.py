@@ -49,10 +49,10 @@ async def generate_teacher_cert(req: TeacherCertRequest):
     try:
         client.table("teacher_links").update({
             "used": True,
-            "name": req.teacher_name,
+            "teacher_name": req.teacher_name,
             "school": req.school_name,
             "completed_at": datetime.utcnow().isoformat()
-        }).eq("token", req.token).execute()
+        }).eq("id", link["id"]).execute()
     except Exception as e:
         print(f"Failed to update teacher record: {e}")
 
