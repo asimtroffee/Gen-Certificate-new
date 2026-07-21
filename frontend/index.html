@@ -377,7 +377,7 @@
 
     <!-- Canvas Area -->
     <div class="designer-canvas-area">
-      <!-- Student Template Uploader -->
+      <!-- Template Uploader -->
       <div id="student-uploader-container" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
         <input type="file" id="file-upload" accept="image/*" style="display:none">
         <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-upload').click()">
@@ -385,25 +385,11 @@
             <div style="width:64px;height:64px;background:var(--blue-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
               <span class="material-symbols-outlined" style="font-size:32px;color:var(--blue)">upload_file</span>
             </div>
-            <p style="font-size:15px;font-weight:600;color:var(--gray-800);margin-bottom:6px;">Upload Certificate Template</p>
+            <p id="upload-title" style="font-size:15px;font-weight:600;color:var(--gray-800);margin-bottom:6px;">Upload Certificate Template</p>
             <p style="font-size:13px;color:var(--gray-500);">Drag & drop or click to choose an image (PNG / JPG)</p>
           </div>
           <div class="canvas-wrapper" id="canvas-wrapper">
             <canvas id="cert-canvas-d"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <!-- Teacher Template Uploader -->
-      <div id="teacher-uploader-container" style="display:none; width:100%; height:100%; align-items:center; justify-content:center;">
-        <input type="file" id="teacher-file-upload" accept="image/*" style="display:none">
-        <div class="drop-zone" id="teacher-drop-zone" onclick="document.getElementById('teacher-file-upload').click()">
-          <div id="teacher-canvas-empty-state" style="text-align:center;padding:40px;">
-            <div style="width:64px;height:64px;background:var(--blue-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
-              <span class="material-symbols-outlined" style="font-size:32px;color:var(--blue)">upload_file</span>
-            </div>
-            <p style="font-size:15px;font-weight:600;color:var(--gray-800);margin-bottom:6px;">Upload Teacher Certificate Template</p>
-            <p style="font-size:13px;color:var(--gray-500);">Drag & drop or click to choose an image (PNG / JPG)</p>
           </div>
         </div>
       </div>
@@ -514,12 +500,11 @@
   const API_BASE = 'https://gen-certificate-new.onrender.com';
 function toggleEventType() {
   const evType = document.getElementById('ev-type').value;
+  const title = document.getElementById('upload-title');
   if (evType === 'teacher') {
-    document.getElementById('student-uploader-container').style.display = 'none';
-    document.getElementById('teacher-uploader-container').style.display = 'flex';
+    title.textContent = 'Upload Teacher Certificate Template';
   } else {
-    document.getElementById('student-uploader-container').style.display = 'flex';
-    document.getElementById('teacher-uploader-container').style.display = 'none';
+    title.textContent = 'Upload Certificate Template';
   }
 }
 
@@ -1048,18 +1033,9 @@ async function publishEvent() {
   
   const evType = document.getElementById('ev-type').value;
   
-  if (evType === 'student' && !DS.bgImage && !DS.currentEventId) { 
-    toast('Please upload a student certificate template', 'error'); 
+  if (!DS.bgImage && !DS.currentEventId) { 
+    toast(evType === 'teacher' ? 'Please upload a teacher certificate template' : 'Please upload a student certificate template', 'error'); 
     return; 
-  }
-
-  let teacherFile = null;
-  if (evType === 'teacher') {
-    teacherFile = document.getElementById('teacher-file-upload').files[0];
-    if (!teacherFile && !DS.currentEventId) { 
-      toast('Please upload a teacher certificate template', 'error'); 
-      return; 
-    }
   }
 
   const btn = document.getElementById('btn-publish');
@@ -1075,8 +1051,8 @@ async function publishEvent() {
 
     fd.append('event_type', evType);
 
-    if (evType === 'teacher' && teacherFile) {
-      fd.append('teacher_template', teacherFile);
+    if (evType === 'teacher' && DS.uploadedFile) {
+      fd.append('teacher_template', DS.uploadedFile);
     }
 
     if (DS.uploadedFile) {
