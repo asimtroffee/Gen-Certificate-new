@@ -326,11 +326,37 @@ async def create_magic_link(req: CreateLinkRequest):
     link_url = f"{base_url}/teacher.html?t={token_val}"
     teacher_display = req.teacher_name or "Teacher"
 
+    html_msg = f"""
+    <p>Hi <strong>{teacher_display}</strong>,</p>
+    <p>Hope you're having a great day! Thanks for helping out with the certificates.</p>
+    <p>Here is your secure "magic link" to access the Certificate Generator portal for your upcoming event, <strong>{event_name}</strong>.</p>
+    <p>👉 <strong><a href="{link_url}">Access Your Portal Here</a></strong></p>
+    
+    <p><strong>How to generate certificates in 3 easy steps:</strong></p>
+    <ol>
+        <li>Click the link above to open your personal dashboard.</li>
+        <li>Upload your Excel (<code>.xlsx</code>) file containing the student names.</li>
+        <li>Match your Excel columns to the correct fields, click "Generate", and your certificates will be created instantly!</li>
+    </ol>
+    
+    <p><strong>📝 Important details for your Excel file:</strong><br>
+    To make sure the certificates generate perfectly, please set up your Excel file like this:</p>
+    <ul>
+        <li>Include a header row at the very top (Row 1) with clear titles like <strong>"Name"</strong> and <strong>"School"</strong>.</li>
+        <li>List the actual student information directly below the headers (Row 2, 3, etc).</li>
+        <li>When you upload the file to the portal, you will see a dropdown menu. Make sure to <strong>match the required fields (like Name) with the exact column name</strong> you used in your Excel file!</li>
+        <li>Make sure there are no blank rows between the students.</li>
+    </ul>
+    
+    <p>If you have any questions or if the link expires, just reach out and let us know.</p>
+    <p>Best regards,<br>The Event Team</p>
+    """
+
     job = EmailJob(
         to_email=req.teacher_email,
-        subject=f"Your certificate generation link for {event_name}",
-        html_body=f"""Hi {teacher_display},<br><br>You've been invited to generate certificates for <strong>{event_name}</strong>.<br><br>Click the secure link below to upload your student list:<br><a href="{link_url}">{link_url}</a><br><br>Thanks,<br>Certificate System""",
-        text_body=f"""Hi {teacher_display},\n\nYou've been invited to generate certificates for {event_name}.\n\nClick the link below to upload your student list:\n{link_url}\n\nThanks,\nCertificate System""",
+        subject="Your Magic Link for Generating Certificates! 🎓",
+        html_body=html_msg,
+        text_body=f"""Hi {teacher_display},\n\nHere is your secure link for {event_name}:\n{link_url}\n\nThanks,\nThe Event Team""",
         **smtp_cfg,
     )
 
@@ -380,11 +406,37 @@ async def resend_link(req: CreateLinkRequest):
     base_url = _get_public_url(client)
     link_url = f"{base_url}/teacher.html?t={token_val}"
 
+    html_msg = f"""
+    <p>Hi <strong>{teacher_name}</strong>,</p>
+    <p>Hope you're having a great day! Thanks for helping out with the certificates.</p>
+    <p>Here is your secure "magic link" to access the Certificate Generator portal for your upcoming event, <strong>{event_name}</strong>.</p>
+    <p>👉 <strong><a href="{link_url}">Access Your Portal Here</a></strong></p>
+    
+    <p><strong>How to generate certificates in 3 easy steps:</strong></p>
+    <ol>
+        <li>Click the link above to open your personal dashboard.</li>
+        <li>Upload your Excel (<code>.xlsx</code>) file containing the student names.</li>
+        <li>Match your Excel columns to the correct fields, click "Generate", and your certificates will be created instantly!</li>
+    </ol>
+    
+    <p><strong>📝 Important details for your Excel file:</strong><br>
+    To make sure the certificates generate perfectly, please set up your Excel file like this:</p>
+    <ul>
+        <li>Include a header row at the very top (Row 1) with clear titles like <strong>"Name"</strong> and <strong>"School"</strong>.</li>
+        <li>List the actual student information directly below the headers (Row 2, 3, etc).</li>
+        <li>When you upload the file to the portal, you will see a dropdown menu. Make sure to <strong>match the required fields (like Name) with the exact column name</strong> you used in your Excel file!</li>
+        <li>Make sure there are no blank rows between the students.</li>
+    </ul>
+    
+    <p>If you have any questions or if the link expires, just reach out and let us know.</p>
+    <p>Best regards,<br>The Event Team</p>
+    """
+
     job = EmailJob(
         to_email=req.teacher_email,
-        subject=f"Your certificate generation link for {event_name}",
-        html_body=f"""Hi {teacher_name},<br><br>Here's your link to generate certificates for <strong>{event_name}</strong>:<br><a href="{link_url}">{link_url}</a><br><br>Thanks,<br>Certificate System""",
-        text_body=f"""Hi {teacher_name},\n\nHere's your link to generate certificates for {event_name}:\n{link_url}\n\nThanks,\nCertificate System""",
+        subject="Your Magic Link for Generating Certificates! 🎓",
+        html_body=html_msg,
+        text_body=f"""Hi {teacher_name},\n\nHere is your secure link for {event_name}:\n{link_url}\n\nThanks,\nThe Event Team""",
         **smtp_cfg,
     )
 
@@ -434,14 +486,41 @@ async def resend_event_links(req: ResendEventLinksRequest):
         link_url = f"{base_url}/teacher.html?t={token_val}"
 
         msg = req.custom_message.replace("{name}", teacher_name)
-        custom_html = f"<p style='white-space: pre-wrap;'>{msg}</p>" if msg else ""
-        custom_text = f"{msg}\n\n" if msg else ""
+        custom_html = f"<div style='padding:10px; background:#f5f5f5; border-left:3px solid #0056b3; margin-bottom:15px; white-space: pre-wrap;'><strong>Message from Organizer:</strong><br>{msg}</div>" if msg else ""
+        custom_text = f"Message from Organizer:\n{msg}\n\n" if msg else ""
+
+        html_msg = f"""
+        <p>Hi <strong>{teacher_name}</strong>,</p>
+        <p>Hope you're having a great day! Thanks for helping out with the certificates.</p>
+        {custom_html}
+        <p>Here is your secure "magic link" to access the Certificate Generator portal for your upcoming event, <strong>{event_name}</strong>.</p>
+        <p>👉 <strong><a href="{link_url}">Access Your Portal Here</a></strong></p>
+        
+        <p><strong>How to generate certificates in 3 easy steps:</strong></p>
+        <ol>
+            <li>Click the link above to open your personal dashboard.</li>
+            <li>Upload your Excel (<code>.xlsx</code>) file containing the student names.</li>
+            <li>Match your Excel columns to the correct fields, click "Generate", and your certificates will be created instantly!</li>
+        </ol>
+        
+        <p><strong>📝 Important details for your Excel file:</strong><br>
+        To make sure the certificates generate perfectly, please set up your Excel file like this:</p>
+        <ul>
+            <li>Include a header row at the very top (Row 1) with clear titles like <strong>"Name"</strong> and <strong>"School"</strong>.</li>
+            <li>List the actual student information directly below the headers (Row 2, 3, etc).</li>
+            <li>When you upload the file to the portal, you will see a dropdown menu. Make sure to <strong>match the required fields (like Name) with the exact column name</strong> you used in your Excel file!</li>
+            <li>Make sure there are no blank rows between the students.</li>
+        </ul>
+        
+        <p>If you have any questions or if the link expires, just reach out and let us know.</p>
+        <p>Best regards,<br>The Event Team</p>
+        """
 
         jobs.append(EmailJob(
             to_email=teacher_email,
-            subject=subject,
-            html_body=f"Hi {teacher_name},<br><br>{custom_html}Here's your link to generate certificates for <strong>{event_name}</strong>:<br><a href='{link_url}'>{link_url}</a><br><br>Thanks,<br>Certificate System",
-            text_body=f"Hi {teacher_name},\n\n{custom_text}Here's your link to generate certificates for {event_name}:\n{link_url}\n\nThanks,\nCertificate System",
+            subject="Your Magic Link for Generating Certificates! 🎓",
+            html_body=html_msg,
+            text_body=f"Hi {teacher_name},\n\n{custom_text}Here's your link to generate certificates for {event_name}:\n{link_url}\n\nThanks,\nThe Event Team",
             **smtp_cfg,
         ))
 
