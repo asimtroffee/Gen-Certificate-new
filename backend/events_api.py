@@ -12,6 +12,8 @@ async def create_event(
     name: str = Form(...),
     template: UploadFile = File(...),
     config: str = Form(...),
+    event_type: str = Form("student"),
+    teacher_template: Optional[UploadFile] = File(None),
 ):
     client = get_client()
     if client is None:
@@ -43,6 +45,23 @@ async def create_event(
         print(f"Failed to upload template: {e}")
         raise HTTPException(500, f"Failed to upload template: {e}")
 
+    teacher_storage_path = None
+    if event_type == "teacher" and teacher_template and teacher_template.filename:
+        teacher_content = await teacher_template.read()
+        t_ext = teacher_template.filename.split(".")[-1].lower()
+        if t_ext not in ("png", "jpg", "jpeg"):
+            t_ext = "png"
+        teacher_storage_path = f"templates/teacher_{event_id}.{t_ext}"
+        try:
+            client.storage.from_("certificates").upload(
+                path=teacher_storage_path,
+                file=teacher_content,
+                file_options={"content-type": f"image/{t_ext}"},
+            )
+        except Exception as e:
+            print(f"Failed to upload teacher template: {e}")
+            raise HTTPException(500, f"Failed to upload teacher template: {e}")
+
     try:
         result = (
             client.table("events")
@@ -52,6 +71,8 @@ async def create_event(
                     "name": name,
                     "template_storage_path": storage_path,
                     "config_json": config_data,
+                    "event_type": event_type,
+                    "teacher_template_path": teacher_storage_path,
                 }
             )
             .execute()
