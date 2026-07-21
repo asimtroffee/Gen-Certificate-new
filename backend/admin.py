@@ -463,6 +463,7 @@ class ResendEventLinksRequest(BaseModel):
     event_id: str = Field(..., min_length=1)
     custom_message: str = ""
     email_choice: str = "default"
+    custom_subject: str = ""
 
 @router.post("/resend-event-links")
 async def resend_event_links(req: ResendEventLinksRequest):
@@ -553,9 +554,11 @@ async def resend_event_links(req: ResendEventLinksRequest):
             """
             text_body = f"Hi {teacher_name},\n\nHere's your link to generate certificates for {event_name}:\n{link_url}\n\nThanks,\nThe Event Team"
 
+        job_subject = req.custom_subject if (req.email_choice == "custom" and req.custom_subject) else "Your Magic Link for Generating Certificates! 🎓"
+
         jobs.append(EmailJob(
             to_email=teacher_email,
-            subject="Your Magic Link for Generating Certificates! 🎓",
+            subject=job_subject,
             html_body=html_msg,
             text_body=text_body,
             **smtp_cfg,
