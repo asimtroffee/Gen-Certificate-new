@@ -6,6 +6,8 @@
 <title>Manage Event Teachers - CertiGen</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+<!-- Quill.js CDN -->
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet" />
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   :root{
@@ -97,7 +99,7 @@
     </div>
     <div class="form-group" style="margin-bottom:0; display:none;" id="custom-msg-group">
       <label class="form-label">Custom Email Message</label>
-      <textarea class="form-input" id="email-message" rows="4" placeholder="Type your custom email here. Use {name} for the teacher's name."></textarea>
+      <div id="editor-container" style="height: 150px; font-family: 'Inter', sans-serif; font-size: 14px;"></div>
     </div>
   </div>
 
@@ -123,11 +125,26 @@
 
 <div id="toast-container"></div>
 
+<!-- Quill.js Script -->
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
 <script>
   'use strict';
-
   
   const API_BASE = 'https://gen-certificate-new.onrender.com';
+  
+  // Initialize Quill editor
+  const quill = new Quill('#editor-container', {
+    theme: 'snow',
+    placeholder: "Type your custom email here. Use {name} for the teacher's name...",
+    modules: {
+      toolbar: [
+        ['bold', 'italic', 'underline'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        ['link', 'image'],
+        ['clean']
+      ]
+    }
+  });
 function toast(msg, type = 'info') {
     const icons = { success: 'check_circle', error: 'error' };
     const el = document.createElement('div');
@@ -232,10 +249,16 @@ function toast(msg, type = 'info') {
 
   async function handleResendAll() {
     const choice = document.getElementById('email-choice').value;
-    const msg = document.getElementById('email-message').value.trim();
-    if (choice === 'custom' && !msg) {
-      toast('Please enter a custom message', 'error');
-      return;
+    
+    // Get HTML from Quill if custom is selected, otherwise empty string
+    let msg = "";
+    if (choice === 'custom') {
+      msg = quill.root.innerHTML;
+      // If editor is effectively empty, Quill still has "<p><br></p>"
+      if (quill.getText().trim() === '') {
+        toast('Please enter a custom message', 'error');
+        return;
+      }
     }
 
     if (!confirm('Are you sure you want to email all pending teachers?')) return;

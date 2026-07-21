@@ -2,6 +2,7 @@
 
 import asyncio
 import os
+import re
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
@@ -506,11 +507,14 @@ async def resend_event_links(req: ResendEventLinksRequest):
 
         if req.email_choice == "custom" and msg:
             html_msg = f"""
-            <div style='white-space: pre-wrap; font-size: 16px;'>{msg}</div>
+            <div style='font-size: 16px; font-family: sans-serif; color: #333;'>
+                {msg}
+            </div>
             <br>
-            <p>👉 <strong><a href="{link_url}">Access Your Portal Here</a></strong></p>
+            <p>👉 <strong><a href="{link_url}" style="display:inline-block; padding:10px 15px; background:#2563EB; color:#fff; text-decoration:none; border-radius:6px; font-weight:bold;">Access Your Portal Here</a></strong></p>
             """
-            text_body = f"{msg}\n\nLink: {link_url}"
+            clean_text = re.sub(r'<[^>]+>', '', msg).strip()
+            text_body = f"{clean_text}\n\nLink: {link_url}"
         else:
             html_msg = f"""
             <p>Hi <strong>{teacher_name}</strong>,</p>
