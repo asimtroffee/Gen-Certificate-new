@@ -59,6 +59,18 @@ def _get_smtp_config(client) -> dict:
     }
 
 
+def _get_public_url(client) -> str:
+    """Retrieve public URL from Supabase config or .env."""
+    base = os.environ.get("PUBLIC_URL", "http://localhost:8000")
+    try:
+        r = client.table("config").select("value").eq("key", "public_url").limit(1).execute()
+        if r.data and r.data[0].get("value"):
+            base = r.data[0]["value"].rstrip("/")
+    except Exception:
+        pass
+    return base
+
+
 async def _background_bulk_email(jobs: list, event_id: str):
     """Background task: sends all emails and logs results."""
     try:
@@ -310,7 +322,7 @@ async def create_magic_link(req: CreateLinkRequest):
     # Gather SMTP config
     smtp_cfg = _get_smtp_config(client)
 
-    base_url = os.environ.get("PUBLIC_URL", "http://localhost:8000")
+    base_url = _get_public_url(client)
     link_url = f"{base_url}/teacher.html?t={token_val}"
     teacher_display = req.teacher_name or "Teacher"
 
@@ -365,7 +377,7 @@ async def resend_link(req: CreateLinkRequest):
 
     smtp_cfg = _get_smtp_config(client)
 
-    base_url = os.environ.get("PUBLIC_URL", "http://localhost:8000")
+    base_url = _get_public_url(client)
     link_url = f"{base_url}/teacher.html?t={token_val}"
 
     job = EmailJob(
@@ -410,7 +422,7 @@ async def resend_event_links(req: ResendEventLinksRequest):
         return {"ok": True, "message": "No pending teachers to resend to."}
 
     smtp_cfg = _get_smtp_config(client)
-    base_url = os.environ.get("PUBLIC_URL", "http://localhost:8000")
+    base_url = _get_public_url(client)
     subject = f"Reminder: Generate certificates for {event_name}"
 
     # Build email jobs for all pending teachers
@@ -421,8 +433,9 @@ async def resend_event_links(req: ResendEventLinksRequest):
         teacher_name = link.get("teacher_name") or "Teacher"
         link_url = f"{base_url}/teacher.html?t={token_val}"
 
-        custom_html = f"<p style='white-space: pre-wrap;'>{req.custom_message}</p>" if req.custom_message else ""
-        custom_text = f"{req.custom_message}\n\n" if req.custom_message else ""
+        msg = req.custom_message.replace("{name}", teacher_name)
+        custom_html = f"<p style='white-space: pre-wrap;'>{msg}</p>" if msg else ""
+        custom_text = f"{msg}\n\n" if msg else ""
 
         jobs.append(EmailJob(
             to_email=teacher_email,
