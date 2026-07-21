@@ -8,6 +8,7 @@ FONTS_DIR = Path(__file__).resolve().parent / "fonts"
 _FONT_PATHS = {
     "Great Vibes": FONTS_DIR / "GreatVibes-Regular.ttf",
     "Inter": FONTS_DIR / "Inter-Regular.ttf",
+    "Arial": FONTS_DIR / "Arial.ttf",
 }
 
 

@@ -114,6 +114,7 @@ async def send_single_email_async(job: EmailJob) -> dict:
                     username=user,
                     password=password,
                     use_tls=True,
+                    timeout=30,
                 )
             else:
                 await aiosmtplib.send(
@@ -123,6 +124,7 @@ async def send_single_email_async(job: EmailJob) -> dict:
                     username=user,
                     password=password,
                     start_tls=start_tls,
+                    timeout=30,
                 )
         except Exception as e:
             print(f"[async_email] Failed to send to {job.to_email}: {e}")

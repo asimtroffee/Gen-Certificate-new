@@ -87,7 +87,8 @@ async def generate_teacher_certificates(req: TeacherGenerateRequest):
 
     fonts = {
         "Great Vibes": lambda size: PILImageFont.truetype(str(FONTS_DIR / "GreatVibes-Regular.ttf"), size),
-        "Inter": lambda size: PILImageFont.truetype(str(FONTS_DIR / "Inter-Regular.ttf"), size) if (FONTS_DIR / "Inter-Regular.ttf").exists() else PILImageFont.truetype(str(FONTS_DIR / "GreatVibes-Regular.ttf"), size)
+        "Inter": lambda size: PILImageFont.truetype(str(FONTS_DIR / "Inter-Regular.ttf"), size) if (FONTS_DIR / "Inter-Regular.ttf").exists() else PILImageFont.truetype(str(FONTS_DIR / "GreatVibes-Regular.ttf"), size),
+        "Arial": lambda size: PILImageFont.truetype(str(FONTS_DIR / "Arial.ttf"), size) if (FONTS_DIR / "Arial.ttf").exists() else PILImageFont.truetype(str(FONTS_DIR / "GreatVibes-Regular.ttf"), size)
     }
     
     total = len(req.records)
