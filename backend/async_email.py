@@ -20,6 +20,8 @@ from pathlib import Path
 from typing import Optional
 
 import aiosmtplib
+import boto3
+from botocore.exceptions import ClientError
 from dotenv import load_dotenv
 
 env_path = Path(__file__).resolve().parent.parent / ".env"
@@ -84,12 +86,40 @@ def _build_message(job: EmailJob) -> MIMEMultipart:
     return msg
 
 
+def _send_ses_sync(msg, source_email):
+    """Synchronous helper to send raw email via boto3 SES."""
+    client = boto3.client('ses', region_name=os.environ.get("AWS_REGION", "us-east-1"))
+    return client.send_raw_email(
+        Source=source_email,
+        Destinations=[msg["To"]],
+        RawMessage={'Data': msg.as_string()}
+    )
+
 async def send_single_email_async(job: EmailJob) -> dict:
     """
-    Send a single email asynchronously via aiosmtplib.
-    Respects the global semaphore to avoid overwhelming the SMTP server.
+    Send a single email asynchronously.
+    If AWS_ACCESS_KEY_ID is in the environment, it uses Amazon SES.
+    Otherwise, it falls back to aiosmtplib (standard SMTP).
     """
+    msg = _build_message(job)
     user = job.from_email or SMTP_USER
+
+    # If AWS is configured, use Amazon SES via API
+    if os.environ.get("AWS_ACCESS_KEY_ID"):
+        try:
+            # SES requires the exact verified sender email
+            # We strip out the name part (e.g., "CertiGen <hello@hemi.my>" -> "hello@hemi.my")
+            source_email = user
+            if "<" in source_email and ">" in source_email:
+                source_email = source_email.split("<")[1].split(">")[0]
+                
+            response = await asyncio.to_thread(_send_ses_sync, msg, source_email)
+            return {"id": response.get('MessageId', 'ses'), "status": "sent", "to": job.to_email}
+        except ClientError as e:
+            print(f"[async_email AWS] Failed to send to {job.to_email}: {e.response['Error']['Message']}")
+            raise Exception(f"AWS SES Error: {e.response['Error']['Message']}")
+
+    # Fallback to standard SMTP via aiosmtplib
     password = job.smtp_password or SMTP_PASS
     host = job.smtp_host or "smtp.gmail.com"
     port = job.smtp_port
@@ -98,9 +128,6 @@ async def send_single_email_async(job: EmailJob) -> dict:
         print(f"[async_email mock] Would send to {job.to_email}: {job.subject}")
         return {"id": "mock", "status": "mock", "to": job.to_email}
 
-    msg = _build_message(job)
-
-    # Auto-detect TLS mode from port
     use_tls = port == 465
     start_tls = port in (587, 25)
 
@@ -127,7 +154,7 @@ async def send_single_email_async(job: EmailJob) -> dict:
                     timeout=30,
                 )
         except Exception as e:
-            print(f"[async_email] Failed to send to {job.to_email}: {e}")
+            print(f"[async_email SMTP] Failed to send to {job.to_email}: {e}")
             raise
 
     return {"id": "smtp", "status": "sent", "to": job.to_email}
