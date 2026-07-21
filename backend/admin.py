@@ -504,15 +504,25 @@ async def resend_event_links(req: ResendEventLinksRequest):
         link_url = f"{base_url}/{html_page}?t={token_val}"
 
         msg = req.custom_message.replace("{name}", teacher_name)
+        magic_link_html = f'<a href="{link_url}" style="display:inline-block; padding:10px 15px; background:#2563EB; color:#fff; text-decoration:none; border-radius:6px; font-weight:bold;">Access Your Portal Here</a>'
 
         if req.email_choice == "custom" and msg:
-            html_msg = f"""
-            <div style='font-size: 16px; font-family: sans-serif; color: #333;'>
-                {msg}
-            </div>
-            <br>
-            <p>👉 <strong><a href="{link_url}" style="display:inline-block; padding:10px 15px; background:#2563EB; color:#fff; text-decoration:none; border-radius:6px; font-weight:bold;">Access Your Portal Here</a></strong></p>
-            """
+            if "{magiclink}" in msg:
+                msg = msg.replace("{magiclink}", magic_link_html)
+                html_msg = f"""
+                <div style='font-size: 16px; font-family: sans-serif; color: #333;'>
+                    {msg}
+                </div>
+                """
+            else:
+                html_msg = f"""
+                <div style='font-size: 16px; font-family: sans-serif; color: #333;'>
+                    {msg}
+                </div>
+                <br>
+                <p>👉 <strong>{magic_link_html}</strong></p>
+                """
+            
             clean_text = re.sub(r'<[^>]+>', '', msg).strip()
             text_body = f"{clean_text}\n\nLink: {link_url}"
         else:
