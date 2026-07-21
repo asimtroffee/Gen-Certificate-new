@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage Event Teachers - CertiGen</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --brand:#6D28D9;--brand-light:#EDE9FE;
+    --blue:#2563EB;--blue-light:#EFF6FF;
+    --red:#EF4444;--red-light:#FEF2F2;
+    --green:#22C55E;--green-light:#F0FDF4;
+    --gray-50:#F9FAFB;--gray-100:#F3F4F6;--gray-200:#E5E7EB;
+    --gray-400:#9CA3AF;--gray-500:#6B7280;
+    --gray-600:#4B5563;--gray-700:#374151;--gray-800:#1F2937;--gray-900:#111827;
+    --radius:8px;--radius-lg:12px;
+    --shadow-sm:0 1px 3px rgba(0,0,0,.08);
+    --shadow:0 4px 12px rgba(0,0,0,.1);
+  }
+  body{font-family:'Inter',sans-serif;background:#FAFAFB;color:var(--gray-900);padding:32px;}
+  a{text-decoration:none;color:var(--gray-600);transition:color .15s;}
+  a:hover{color:var(--gray-900);}
+  
+  .page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;}
+  .page-title{font-size:22px;font-weight:700;color:var(--gray-900);line-height:1.2;display:flex;align-items:center;gap:12px;}
+  .page-sub{font-size:13px;color:var(--gray-500);margin-top:3px;margin-left:38px;}
+
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;font-family:'Inter',sans-serif;}
+  .btn-primary{background:var(--blue);color:#fff;}
+  .btn-primary:hover{background:#1d4ed8;}
+  .btn-outline{background:#fff;color:var(--gray-700);border:1px solid var(--gray-200);}
+  .btn-outline:hover{background:var(--gray-50);}
+  .btn-sm{padding:5px 12px;font-size:12px;}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+  .btn .material-symbols-outlined{font-size:16px;}
+  
+  .card{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:hidden;}
+  .card-header{padding:16px 20px;border-bottom:1px solid var(--gray-200);background:var(--gray-50);display:flex;justify-content:space-between;align-items:center;}
+  .card-title{font-size:14px;font-weight:600;color:var(--gray-700);}
+  
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead th{padding:10px 16px;text-align:left;font-weight:600;color:var(--gray-500);font-size:11px;text-transform:uppercase;letter-spacing:.4px;background:var(--gray-50);border-bottom:1px solid var(--gray-200);}
+  tbody tr{border-bottom:1px solid var(--gray-100);transition:background .1s;}
+  tbody tr:hover{background:var(--gray-50);}
+  tbody td{padding:12px 16px;color:var(--gray-700);}
+  tbody tr:last-child{border-bottom:none;}
+  
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:99px;font-size:11px;font-weight:600;}
+  .badge-green{background:var(--green-light);color:#15803d;}
+  .badge-gray{background:var(--gray-100);color:var(--gray-600);}
+
+  .form-group{margin-bottom:16px;}
+  .form-label{display:block;font-size:12px;font-weight:600;color:var(--gray-600);text-transform:uppercase;margin-bottom:6px;}
+  .form-input{width:100%;padding:9px 12px;border:1px solid var(--gray-200);border-radius:var(--radius);font-size:14px;font-family:'Inter',sans-serif;outline:none;}
+  
+  #toast-container{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+  .toast{display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;box-shadow:var(--shadow);animation:toastIn .25s ease;pointer-events:all;max-width:340px;}
+  .toast-success{background:#fff;border-left:4px solid var(--green);color:var(--gray-800);}
+  .toast-error{background:#fff;border-left:4px solid var(--red);color:var(--gray-800);}
+  .toast .material-symbols-outlined{font-size:18px;}
+  @keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+</style>
+</head>
+<body>
+
+<div style="max-width:960px;margin:0 auto;">
+  <a href="index.html" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;font-size:14px;font-weight:500;">
+    <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span>Back to Dashboard
+  </a>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Manage Teachers</h1>
+      <p class="page-sub" id="event-subtitle">Loading event...</p>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <label class="btn btn-outline" style="cursor:pointer">
+        <span class="material-symbols-outlined">upload_file</span>Upload Excel
+        <input type="file" id="excel-upload" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleExcelUpload(event)">
+      </label>
+      <button class="btn btn-primary" onclick="handleResendAll()" id="btn-email-pending" disabled>
+        <span class="material-symbols-outlined">mail</span>Email Pending
+      </button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:24px;padding:20px;">
+    <div class="form-group" style="margin-bottom:0;">
+      <label class="form-label">Custom Email Message (Optional)</label>
+      <textarea class="form-input" id="email-message" rows="3" placeholder="Add a custom note to the magic link email..."></textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Assigned Teachers</div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Teacher</th>
+          <th>Email</th>
+          <th>Status</th>
+          <th>Students</th>
+        </tr>
+      </thead>
+      <tbody id="teachers-tbody">
+        <tr><td colspan="4" style="text-align:center;padding:24px;color:var(--gray-400)">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+  'use strict';
+
+  function toast(msg, type = 'info') {
+    const icons = { success: 'check_circle', error: 'error' };
+    const el = document.createElement('div');
+    el.className = `toast toast-${type}`;
+    el.innerHTML = `<span class="material-symbols-outlined">${icons[type]}</span><span>${msg}</span>`;
+    document.getElementById('toast-container').appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+
+  function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = String(s || '');
+    return d.innerHTML;
+  }
+
+  // Parse eventId from URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const eventId = urlParams.get('eventId');
+
+  if (!eventId) {
+    document.getElementById('event-subtitle').textContent = 'Error: No event ID provided.';
+    document.getElementById('teachers-tbody').innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Event ID missing in URL.</td></tr>';
+  } else {
+    loadTeachers();
+  }
+
+  async function loadTeachers() {
+    try {
+      const res = await fetch(`/api/admin/events/${eventId}/teachers`);
+      if (!res.ok) throw new Error('Failed to load teachers');
+      const data = await res.json();
+      const teachers = data.teachers || [];
+      
+      document.getElementById('event-subtitle').textContent = `${teachers.length} total teachers`;
+
+      const pendingCount = teachers.filter(t => t.status !== 'used').length;
+      document.getElementById('btn-email-pending').disabled = pendingCount === 0;
+
+      const tbody = document.getElementById('teachers-tbody');
+      if (teachers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--gray-400)">No teachers assigned yet. Upload an Excel file.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = teachers.map(t => {
+        const certCount = t.student_count || 0;
+        const badge = t.status === 'used'
+          ? `<span class="badge badge-green"><span class="material-symbols-outlined" style="font-size:12px">check_circle</span>Completed</span>`
+          : '<span class="badge badge-gray">Pending</span>';
+          
+        return `<tr>
+          <td style="font-weight:600;">${esc(t.teacher_name)}</td>
+          <td style="color:var(--gray-500)">${esc(t.teacher_email)}</td>
+          <td>${badge}</td>
+          <td style="color:var(--gray-500);font-weight:500">${certCount}</td>
+        </tr>`;
+      }).join('');
+
+    } catch (e) {
+      document.getElementById('teachers-tbody').innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--red);padding:24px;">Error: ${esc(e.message)}</td></tr>`;
+    }
+  }
+
+  async function handleExcelUpload(e) {
+    const file = e.target.files[0];
+    if (!file || !eventId) return;
+
+    const btn = document.querySelector('label.btn-outline');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<span class="material-symbols-outlined spin">progress_activity</span>Uploading...';
+    btn.style.pointerEvents = 'none';
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch(`/api/admin/events/${eventId}/teachers/upload`, {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast(`Successfully imported ${data.added} teachers!`, 'success');
+        loadTeachers();
+      } else {
+        throw new Error(data.detail || 'Upload failed');
+      }
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      e.target.value = '';
+      btn.innerHTML = originalText;
+      btn.style.pointerEvents = 'auto';
+    }
+  }
+
+  async function handleResendAll() {
+    const msg = document.getElementById('email-message').value.trim();
+    if (!confirm('Are you sure you want to email all pending teachers?')) return;
+    
+    const btn = document.getElementById('btn-email-pending');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined spin">progress_activity</span>Sending...';
+
+    try {
+      const res = await fetch('/api/admin/resend-event-links', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event_id: eventId, custom_message: msg }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Failed to send emails');
+      
+      toast(data.message, 'success');
+    } catch (err) {
+      toast(err.message, 'error');
+      btn.disabled = false;
+    } finally {
+      btn.innerHTML = '<span class="material-symbols-outlined">mail</span>Email Pending';
+    }
+  }
+</script>
+</body>
+</html>

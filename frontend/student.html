@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CertifyAuto - Generate Your Certificate</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=Great+Vibes&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "surface-container-lowest": "#ffffff", "surface-dim": "#cbdbf5",
+        "surface-bright": "#f8f9ff", "surface-container-low": "#eff4ff",
+        "surface-container": "#e5eeff", "surface-container-high": "#dce9ff",
+        "surface-container-highest": "#d3e4fe", "on-surface": "#0b1c30",
+        "on-surface-variant": "#45464d", "outline": "#76777d",
+        "outline-variant": "#c6c6cd", "primary": "#000000",
+        "on-primary": "#ffffff", "secondary": "#735c00",
+        "on-secondary": "#ffffff", "secondary-container": "#fed65b",
+        "error": "#ba1a1a", "on-error": "#ffffff",
+        "error-container": "#ffdad6", "on-error-container": "#93000a",
+        "background": "#f8f9ff", "on-background": "#0b1c30",
+      },
+      borderRadius: { DEFAULT: "0.125rem", lg: "0.25rem", xl: "0.5rem" },
+      fontFamily: {
+        'sans': ['Inter', 'system-ui', 'sans-serif'],
+        'label': ['IBM Plex Sans', 'sans-serif'],
+        'certificate': ['Great Vibes', 'cursive'],
+      }
+    }
+  }
+}
+</script>
+<style>
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+.gold-glow { box-shadow: 0 0 40px rgba(200, 164, 92, 0.15); }
+.gold-gradient { background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%); }
+.shimmer {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+.shake { animation: shake 0.3s ease; }
+</style>
+</head>
+<body class="bg-[#fafaf7] text-on-surface min-h-screen font-sans flex flex-col justify-center items-center p-4 md:p-10">
+<main class="w-full max-w-[640px] mx-auto flex flex-col items-center gap-8">
+  <header class="text-center flex flex-col items-center gap-4 w-full">
+    <div class="relative w-24 h-24 flex items-center justify-center rounded-full bg-white gold-glow border border-[#E2E8F0]">
+      <span class="material-symbols-outlined text-[#c8a45c]" style="font-size: 72px;">school</span>
+    </div>
+    <h1 class="text-3xl md:text-4xl font-bold text-primary tracking-tight">Congratulations!</h1>
+    <p class="text-lg text-on-surface-variant">Generate your certificate</p>
+  </header>
+
+  <section class="w-full bg-white rounded-xl shadow-[0_4px_12px_rgba(15,23,42,0.05)] border border-[#E2E8F0] p-6 md:p-8 flex flex-col items-center gap-6">
+    <div class="flex gap-2 self-start">
+      <button class="format-btn px-4 py-1.5 rounded border text-sm font-medium transition-all" data-format="png">PNG</button>
+      <button class="format-btn px-4 py-1.5 rounded border text-sm font-medium transition-all" data-format="pdf">PDF</button>
+    </div>
+
+    <div class="w-full max-w-[560px] aspect-video relative rounded border border-[#E2E8F0] overflow-hidden flex items-center justify-center bg-[#f8fafc]">
+      <div class="absolute inset-0 w-full h-full shimmer" id="preview-skeleton"></div>
+      <canvas class="w-full h-full absolute inset-0 opacity-0 transition-opacity duration-300" id="certificate-canvas"></canvas>
+      <div class="hidden flex-col items-center justify-center gap-2 absolute inset-0 bg-white" id="preview-error">
+        <span class="material-symbols-outlined text-error" style="font-size: 32px;">error</span>
+        <p class="text-sm font-medium text-error">Certificate setup not available</p>
+        <p class="text-xs text-on-surface-variant">Contact your administrator</p>
+      </div>
+    </div>
+
+    <div class="w-full flex flex-col gap-2">
+      <label class="text-xs font-medium text-on-surface-variant uppercase tracking-wider" for="student-name">Enter your full name</label>
+      <input class="w-full h-14 px-4 text-lg border border-[#E2E8F0] rounded bg-white text-primary focus:outline-none focus:border-primary focus:ring-2 focus:ring-[#F1F5F9] transition-all" id="student-name" placeholder="John Smith" type="text" maxlength="100"/>
+    </div>
+
+    <div class="w-full flex flex-col gap-2">
+      <label class="text-xs font-medium text-on-surface-variant uppercase tracking-wider" for="student-email">Email (optional)</label>
+      <input class="w-full h-12 px-4 border border-[#E2E8F0] rounded bg-white text-primary focus:outline-none focus:border-primary focus:ring-2 focus:ring-[#F1F5F9] transition-all" id="student-email" placeholder="john@example.com" type="email"/>
+    </div>
+
+    <div class="w-full flex flex-col items-center gap-3">
+      <button class="w-full h-14 rounded gold-gradient text-white font-medium text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed" id="download-btn" disabled>
+        <span class="material-symbols-outlined" style="font-size: 24px;">download</span>
+        Download Your Certificate
+      </button>
+      <p class="text-sm text-on-surface-variant opacity-0 transition-opacity h-5" id="status-message"></p>
+    </div>
+  </section>
+
+  <div class="text-center flex flex-col items-center gap-2 opacity-60">
+    <span class="material-symbols-outlined" style="font-size: 24px;">verified</span>
+    <span class="text-xs font-medium uppercase tracking-widest text-on-surface-variant">Secured by CertifyAuto</span>
+  </div>
+</main>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const canvas = document.getElementById('certificate-canvas');
+  const ctx = canvas.getContext('2d');
+  const skeleton = document.getElementById('preview-skeleton');
+  const errorState = document.getElementById('preview-error');
+  const input = document.getElementById('student-name');
+  const emailInput = document.getElementById('student-email');
+  const btn = document.getElementById('download-btn');
+  const statusMsg = document.getElementById('status-message');
+  const formatBtns = document.querySelectorAll('.format-btn');
+
+  let templateImage = null;
+  let config = null;
+  let selectedFormat = 'png';
+  let nameValue = '';
+
+  formatBtns.forEach(b => {
+    b.addEventListener('click', () => {
+      formatBtns.forEach(x => {
+        x.classList.remove('bg-primary', 'text-white', 'border-primary');
+        x.classList.add('border-[#E2E8F0]', 'text-on-surface-variant');
+      });
+      b.classList.add('bg-primary', 'text-white', 'border-primary');
+      b.classList.remove('border-[#E2E8F0]', 'text-on-surface-variant');
+      selectedFormat = b.dataset.format;
+    });
+  });
+  document.querySelector('[data-format="png"]').click();
+
+  async function init() {
+    try {
+      const [configResp, templateResp] = await Promise.all([
+        fetch('/api/config'),
+        fetch('/api/template'),
+      ]);
+      if (!configResp.ok || !templateResp.ok) throw new Error('Not found');
+
+      config = await configResp.json();
+      const blob = await templateResp.blob();
+
+      templateImage = new Image();
+      templateImage.onload = () => {
+        skeleton.style.display = 'none';
+        canvas.classList.remove('opacity-0');
+
+        const cw = 800;
+        const ch = 800 * (config.templateHeight / config.templateWidth);
+        canvas.width = cw;
+        canvas.height = ch;
+        canvas.style.width = '100%';
+        canvas.style.height = 'auto';
+
+        drawPreview(nameValue);
+        btn.disabled = false;
+      };
+      templateImage.src = URL.createObjectURL(blob);
+    } catch (e) {
+      skeleton.style.display = 'none';
+      errorState.classList.remove('hidden');
+      canvas.classList.add('opacity-0');
+    }
+  }
+
+  function drawPreview(name) {
+    if (!templateImage || !config) return;
+    const cw = canvas.width;
+    const ch = canvas.height;
+
+    ctx.clearRect(0, 0, cw, ch);
+    ctx.drawImage(templateImage, 0, 0, cw, ch);
+
+    const displayName = name.trim() || 'Your Name';
+    const tc = config.text;
+    const px = (tc.x / 100) * cw;
+    const py = (tc.y / 100) * ch;
+    const fs = (tc.fontSize / config.templateWidth) * cw;
+
+    ctx.font = `${fs}px "${tc.fontFamily}", cursive`;
+    ctx.fillStyle = name.trim() ? tc.fontColor : '#CBD5E1';
+    ctx.textAlign = tc.textAlign;
+    ctx.textBaseline = 'middle';
+    ctx.fillText(displayName, px, py);
+  }
+
+  let previewTimer;
+  input.addEventListener('input', (e) => {
+    nameValue = e.target.value;
+    clearTimeout(previewTimer);
+    previewTimer = setTimeout(() => drawPreview(nameValue), 50);
+  });
+
+  btn.addEventListener('click', async () => {
+    const name = nameValue.trim();
+    const email = emailInput.value.trim();
+    if (!name) {
+      statusMsg.textContent = 'Please enter your name first';
+      statusMsg.className = 'text-sm text-error opacity-100 h-5';
+      input.classList.add('shake');
+      setTimeout(() => input.classList.remove('shake'), 300);
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined animate-spin" style="font-size:24px">progress_activity</span> Looking up...';
+    statusMsg.className = 'text-sm text-on-surface-variant opacity-100 h-5';
+    statusMsg.textContent = 'Checking for existing certificate...';
+
+    try {
+      const safeName = name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9_-]/g, '');
+      const lookupUrl = `/api/student/certificate?name=${encodeURIComponent(name)}`;
+
+      const lookupResp = await fetch(lookupUrl);
+
+      if (lookupResp.ok) {
+        statusMsg.textContent = 'Certificate found! Downloading...';
+        const blob = await lookupResp.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Certificate-${safeName}.${selectedFormat}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } else {
+        statusMsg.textContent = 'Generating new certificate...';
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin" style="font-size:24px">progress_activity</span> Generating...';
+
+        const genResp = await fetch('/api/student/certificate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, format: selectedFormat }),
+        });
+
+        if (!genResp.ok) {
+          const err = await genResp.json().catch(() => ({ detail: 'Generation failed' }));
+          throw new Error(err.detail || 'Generation failed');
+        }
+
+        const blob = await genResp.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Certificate-${safeName}.${selectedFormat}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      statusMsg.textContent = 'Downloaded successfully!';
+      statusMsg.className = 'text-sm text-[#10B981] opacity-100 h-5';
+      btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:24px">check</span> Download Complete';
+
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:24px">download</span> Download Your Certificate';
+        statusMsg.className = 'text-sm opacity-0 h-5';
+      }, 3000);
+    } catch (e) {
+      statusMsg.textContent = e.message || 'Download failed. Please try again.';
+      statusMsg.className = 'text-sm text-error opacity-100 h-5';
+      btn.disabled = false;
+      btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:24px">download</span> Download Your Certificate';
+    }
+  });
+
+  init();
+});
+</script>
+</body></html>

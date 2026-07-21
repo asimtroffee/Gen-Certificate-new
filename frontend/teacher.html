@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teacher Certificate Generator — CertiGen</title>
+<meta name="description" content="Upload your student list and generate certificates instantly.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --brand:#6D28D9;--brand-light:#EDE9FE;
+    --gold:#c8a45c;--gold-dark:#b08d4b;
+    --blue:#2563EB;
+    --green:#22C55E;--green-light:#F0FDF4;
+    --red:#EF4444;--red-light:#FEF2F2;
+    --gray-50:#F9FAFB;--gray-100:#F3F4F6;--gray-200:#E5E7EB;
+    --gray-300:#D1D5DB;--gray-400:#9CA3AF;--gray-500:#6B7280;
+    --gray-600:#4B5563;--gray-700:#374151;--gray-800:#1F2937;--gray-900:#111827;
+    --radius:8px;--radius-lg:12px;--radius-xl:16px;
+    --shadow:0 4px 24px rgba(0,0,0,.08);
+  }
+  body{
+    font-family:'Inter',sans-serif;
+    background:linear-gradient(135deg,#F3F4F6 0%,#EDE9FE 100%);
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
+  }
+
+  /* ── Card ───────────────────────────────────────────────── */
+  .card{
+    background:#fff;border-radius:var(--radius-xl);box-shadow:var(--shadow);
+    width:100%;max-width:560px;overflow:hidden;
+  }
+
+  /* ── Header banner ───────────────────────────────────────── */
+  .card-header{
+    background:linear-gradient(135deg,#c8a45c 0%,#9a7540 100%);
+    padding:28px 32px 24px;color:#fff;
+  }
+  .card-header .logo-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;opacity:.85;}
+  .card-header .logo-row .material-symbols-outlined{font-size:18px;}
+  .card-header .logo-row span{font-size:13px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;}
+  .card-header h1{font-size:22px;font-weight:700;line-height:1.2;margin-bottom:4px;}
+  .card-header .sub{font-size:13px;opacity:.8;}
+  .badge-used{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.2);border-radius:99px;padding:3px 10px;font-size:12px;font-weight:600;margin-top:6px;}
+
+  /* ── Steps ───────────────────────────────────────────────── */
+  .step{display:none;padding:28px 32px;}
+  .step.active{display:block;}
+
+  /* ── Upload drop zone ────────────────────────────────────── */
+  .drop-zone{
+    border:2px dashed var(--gray-300);border-radius:var(--radius-lg);
+    padding:48px 24px;text-align:center;cursor:pointer;transition:all .2s;
+    background:var(--gray-50);
+  }
+  .drop-zone:hover,.drop-zone.drag-over{border-color:var(--gold);background:rgba(200,164,92,.05);}
+  .drop-zone .material-symbols-outlined{font-size:40px;color:var(--gold);display:block;margin-bottom:10px;}
+  .drop-zone h3{font-size:15px;font-weight:600;color:var(--gray-800);margin-bottom:4px;}
+  .drop-zone p{font-size:13px;color:var(--gray-500);}
+  .drop-zone input[type=file]{display:none;}
+
+  /* ── Mapping ──────────────────────────────────────────────── */
+  .step-title{font-size:16px;font-weight:700;color:var(--gray-900);margin-bottom:4px;}
+  .step-sub{font-size:13px;color:var(--gray-500);margin-bottom:20px;}
+  .mapping-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--gray-100);}
+  .mapping-row:last-child{border-bottom:none;}
+  .mapping-field{font-size:13px;font-weight:600;color:var(--gray-800);}
+  .mapping-field small{display:block;font-size:11px;font-weight:400;color:var(--gray-500);margin-top:2px;}
+  .mapping-select{border:1px solid var(--gray-200);border-radius:var(--radius);padding:7px 10px;font-size:13px;font-family:'Inter',sans-serif;color:var(--gray-800);background:#fff;min-width:180px;outline:none;cursor:pointer;}
+  .mapping-select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(200,164,92,.15);}
+  .arrow-icon{font-size:18px;color:var(--gray-400);margin:0 10px;}
+
+  /* ── Progress ─────────────────────────────────────────────── */
+  .progress-wrap{text-align:center;}
+  .spin-icon{font-size:48px;color:var(--gold);display:block;margin:0 auto 16px;animation:spin 2s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .prog-bar-bg{width:100%;height:8px;background:var(--gray-200);border-radius:99px;overflow:hidden;margin:16px 0 6px;}
+  .prog-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-dark));border-radius:99px;transition:width .3s ease;}
+  .prog-label{font-size:12px;color:var(--gray-500);text-align:right;}
+  .prog-name{font-size:14px;color:var(--gray-600);margin-top:6px;}
+
+  /* ── Done ─────────────────────────────────────────────────── */
+  .done-wrap{text-align:center;}
+  .done-icon{font-size:64px;color:var(--green);display:block;margin:0 auto 16px;}
+  .done-wrap h2{font-size:22px;font-weight:700;color:var(--gray-900);margin-bottom:6px;}
+  .done-wrap p{font-size:14px;color:var(--gray-500);margin-bottom:24px;}
+
+  /* ── Error ────────────────────────────────────────────────── */
+  .error-wrap{text-align:center;}
+  .error-icon{font-size:56px;color:var(--red);display:block;margin:0 auto 14px;}
+  .error-wrap h2{font-size:20px;font-weight:700;color:var(--gray-900);margin-bottom:8px;}
+  .error-wrap p{font-size:14px;color:var(--gray-600);}
+
+  /* ── Buttons ─────────────────────────────────────────────── */
+  .btn{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:'Inter',sans-serif;text-decoration:none;}
+  .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#fff;box-shadow:0 4px 14px rgba(200,164,92,.35);}
+  .btn-gold:hover{opacity:.9;transform:translateY(-1px);}
+  .btn-outline{background:#fff;color:var(--gray-700);border:1px solid var(--gray-200);}
+  .btn-outline:hover{background:var(--gray-50);}
+  .btn-full{width:100%;justify-content:center;}
+  .btn-lg{padding:13px 24px;font-size:15px;}
+  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+  .btn .material-symbols-outlined{font-size:18px;}
+
+  /* ── Actions bar ─────────────────────────────────────────── */
+  .actions-bar{display:flex;justify-content:space-between;align-items:center;margin-top:24px;}
+
+  /* ── Footer note ─────────────────────────────────────────── */
+  .footer-note{font-size:11px;color:var(--gray-400);text-align:center;margin-top:6px;}
+
+  /* ── Errors list ─────────────────────────────────────────── */
+  .errors-list{margin-top:12px;max-height:140px;overflow-y:auto;}
+  .err-item{display:flex;gap:8px;font-size:12px;padding:6px 10px;background:var(--red-light);border-radius:6px;margin-bottom:4px;color:#991b1b;}
+  .err-item .material-symbols-outlined{font-size:14px;flex-shrink:0;margin-top:1px;}
+</style>
+</head>
+<body>
+<div class="card" id="main-card">
+
+  <!-- Header -->
+  <div class="card-header" id="card-header">
+    <div class="logo-row">
+      <span class="material-symbols-outlined">verified</span>
+      <span>CertiGen</span>
+    </div>
+    <h1 id="hdr-event-name">Loading…</h1>
+    <p class="sub" id="hdr-teacher-info">Please wait while we verify your link.</p>
+  </div>
+
+  <!-- STEP: Upload -->
+  <div class="step active" id="step-upload">
+    <h2 class="step-title">Upload Student List</h2>
+    <p class="step-sub">Upload a CSV or Excel (.xlsx) file with your students' information.</p>
+
+    <div class="drop-zone" id="drop-zone">
+      <span class="material-symbols-outlined">upload_file</span>
+      <h3>Click to upload or drag & drop</h3>
+      <p>Accepted formats: .csv, .xlsx, .xls</p>
+      <input type="file" id="file-input" accept=".csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">
+    </div>
+  </div>
+
+  <!-- STEP: Mapping -->
+  <div class="step" id="step-mapping">
+    <h2 class="step-title">Map Columns</h2>
+    <p class="step-sub" id="mapping-sub">Found <strong id="row-count">0</strong> students. Match your file columns to the certificate fields below.</p>
+    <div id="mapping-container"></div>
+    <div class="actions-bar">
+      <button class="btn btn-outline" onclick="showStep('upload')">
+        <span class="material-symbols-outlined">arrow_back</span>Back
+      </button>
+      <button class="btn btn-gold" id="btn-generate" onclick="startGeneration()">
+        <span class="material-symbols-outlined">auto_awesome</span>Generate Certificates
+      </button>
+    </div>
+  </div>
+
+  <!-- STEP: Generating -->
+  <div class="step" id="step-generating">
+    <div class="progress-wrap">
+      <span class="material-symbols-outlined spin-icon">settings</span>
+      <h2 style="font-size:18px;font-weight:700;color:var(--gray-900);margin-bottom:4px" id="prog-status">Generating certificates…</h2>
+      <p class="prog-name" id="prog-name">Starting up…</p>
+      <div class="prog-bar-bg">
+        <div class="prog-bar-fill" id="prog-bar" style="width:0%"></div>
+      </div>
+      <p class="prog-label" id="prog-pct">0%</p>
+      <div class="errors-list" id="err-list"></div>
+    </div>
+  </div>
+
+  <!-- STEP: Done -->
+  <div class="step" id="step-done">
+    <div class="done-wrap">
+      <span class="material-symbols-outlined done-icon">check_circle</span>
+      <h2>All Done!</h2>
+      <p id="done-msg">Your certificates have been successfully generated.</p>
+      <a href="#" id="download-btn" class="btn btn-gold btn-lg" download>
+        <span class="material-symbols-outlined">download</span>Download ZIP
+      </a>
+      <p class="footer-note" style="margin-top:14px">Your ZIP file is ready. Download it now.</p>
+    </div>
+  </div>
+
+  <!-- STEP: Error -->
+  <div class="step" id="step-error">
+    <div class="error-wrap">
+      <span class="material-symbols-outlined error-icon">error</span>
+      <h2>Something went wrong</h2>
+      <p id="err-msg">An unexpected error occurred.</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+'use strict';
+
+/* ─── State ──────────────────────────────────────────────── */
+const token = new URLSearchParams(window.location.search).get('t');
+let eventFields = [];   // fields defined in the event config
+let parsedRows  = [];   // rows from uploaded file
+let fileHeaders = [];   // column headers from the file
+
+/* ─── DOM refs ───────────────────────────────────────────── */
+const $ = id => document.getElementById(id);
+
+/* ─── Step management ────────────────────────────────────── */
+const STEPS = ['upload','mapping','generating','done','error'];
+function showStep(name) {
+  STEPS.forEach(s => $('step-' + s).classList.remove('active'));
+  $('step-' + name).classList.add('active');
+}
+
+function showError(msg) {
+  $('err-msg').textContent = msg;
+  showStep('error');
+}
+
+/* ─── Init ───────────────────────────────────────────────── */
+async function init() {
+  if (!token) { showError('No access token found in the URL. Please use the link from your email.'); return; }
+
+  try {
+    const res = await fetch(`/api/teacher/link/${token}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Invalid or expired link');
+    if (data.used) {
+      $('card-header').style.background = 'linear-gradient(135deg,#6B7280 0%,#374151 100%)';
+      $('hdr-event-name').textContent = data.event_name || 'Event Certificates';
+      $('hdr-teacher-info').innerHTML = `<span style="background:rgba(255,255,255,.2);padding:2px 10px;border-radius:99px;font-size:12px;font-weight:600">✓ Already used — certificates have been generated</span>`;
+      showError('This link has already been used. Each link can only be used once. Please contact the event organiser if you need a new link.');
+      return;
+    }
+
+    $('hdr-event-name').textContent = data.event_name || 'Event Certificates';
+    $('hdr-teacher-info').textContent = `Welcome, ${data.teacher_name || data.teacher_email || 'Teacher'} 👋`;
+    eventFields = data.fields || [];
+    showStep('upload');
+  } catch (err) {
+    showError(err.message);
+  }
+}
+
+/* ─── File Upload ────────────────────────────────────────── */
+const dropZone = $('drop-zone');
+const fileInput = $('file-input');
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+
+function normalizeData(arrayOfArrays) {
+  if (!arrayOfArrays || arrayOfArrays.length === 0) return null;
+
+  // Find the header row: the first row with the most non-empty string cells
+  let maxCols = 0;
+  let headerRowIdx = 0;
+  
+  for (let i = 0; i < Math.min(20, arrayOfArrays.length); i++) {
+    const row = arrayOfArrays[i] || [];
+    const numCols = row.filter(cell => cell !== null && cell !== undefined && String(cell).trim() !== '').length;
+    if (numCols > maxCols) {
+      maxCols = numCols;
+      headerRowIdx = i;
+    }
+  }
+
+  const rawHeaders = arrayOfArrays[headerRowIdx] || [];
+  const headers = [];
+  rawHeaders.forEach((h, i) => {
+    let name = (h !== null && h !== undefined) ? String(h).trim() : '';
+    if (!name) name = `Column_${i+1}`;
+    let finalName = name;
+    let count = 1;
+    while(headers.includes(finalName)) {
+      finalName = `${name}_${count}`;
+      count++;
+    }
+    headers.push(finalName);
+  });
+
+  const rows = [];
+  for (let i = headerRowIdx + 1; i < arrayOfArrays.length; i++) {
+    const rawRow = arrayOfArrays[i] || [];
+    if (rawRow.every(cell => cell === null || cell === undefined || String(cell).trim() === '')) {
+      continue;
+    }
+    const obj = {};
+    headers.forEach((h, colIdx) => {
+      obj[h] = rawRow[colIdx] !== undefined ? rawRow[colIdx] : '';
+    });
+    rows.push(obj);
+  }
+
+  return { headers, rows };
+}
+
+function handleFile(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (ext === 'csv') {
+    Papa.parse(file, {
+      header: false,
+      skipEmptyLines: true,
+      complete: r => {
+        const normalized = normalizeData(r.data);
+        if (normalized && normalized.rows.length > 0) processData(normalized.rows, normalized.headers);
+        else alert('Could not parse the file or file is empty.');
+      },
+    });
+  } else if (ext === 'xlsx' || ext === 'xls') {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const arr = XLSX.utils.sheet_to_json(ws, { header: 1 });
+      const normalized = normalizeData(arr);
+      if (normalized && normalized.rows.length > 0) processData(normalized.rows, normalized.headers);
+      else alert('The Excel file appears to be empty.');
+    };
+    reader.readAsArrayBuffer(file);
+  } else {
+    alert('Please upload a .csv or .xlsx file.');
+  }
+}
+
+function processData(rows, headers) {
+  if (!rows || rows.length === 0) { alert('The file is empty.'); return; }
+  parsedRows  = rows;
+  fileHeaders = headers;
+  $('row-count').textContent = rows.length;
+  buildMappingUI();
+  showStep('mapping');
+}
+
+/* ─── Column Mapping UI ──────────────────────────────────── */
+function buildMappingUI() {
+  const container = $('mapping-container');
+  container.innerHTML = '';
+
+  if (!eventFields || eventFields.length === 0) {
+    container.innerHTML = '<p style="color:var(--red);font-size:13px;padding:12px 0">No fields are defined for this event. Please contact the event organiser.</p>';
+    $('btn-generate').disabled = true;
+    return;
+  }
+  $('btn-generate').disabled = false;
+
+  eventFields.forEach(field => {
+    const fIdLow   = (field.id    || '').toLowerCase();
+    const fLblLow  = (field.label || '').toLowerCase();
+
+    // Auto-match heuristic with English and Bahasa Melayu support
+    let bestMatch = '';
+    const synonyms = {
+      'name': ['name', 'nama', 'murid', 'pelajar'],
+      'school': ['school', 'sekolah'],
+      'class': ['class', 'kelas', 'tingkatan', 'tahun'],
+      'ic': ['ic', 'mykad', 'kp', 'kad pengenalan', 'no'],
+      'age': ['age', 'umur'],
+      'category': ['category', 'kategori'],
+      'gender': ['gender', 'jantina'],
+    };
+
+    for (const h of fileHeaders) {
+      const hl = h.toLowerCase();
+      if (hl === fIdLow || hl === fLblLow) {
+        bestMatch = h;
+        break;
+      }
+      
+      // Synonym check
+      let matched = false;
+      for (const [enKey, myWords] of Object.entries(synonyms)) {
+        if (fIdLow.includes(enKey) || fLblLow.includes(enKey)) {
+          if (myWords.some(w => hl.includes(w))) {
+            bestMatch = h;
+            matched = true;
+            break;
+          }
+        }
+      }
+      if (matched) break;
+    }
+    if (!bestMatch && fileHeaders.length > 0) bestMatch = fileHeaders[0];
+
+    const options = [`<option value="">— Ignore —</option>`,
+      ...fileHeaders.map(h => `<option value="${esc(h)}" ${h === bestMatch ? 'selected' : ''}>${esc(h)}</option>`)
+    ].join('');
+
+    const div = document.createElement('div');
+    div.className = 'mapping-row';
+    div.innerHTML = `
+      <div class="mapping-field">
+        ${esc(field.id || field.label)}
+        <small>Required certificate field</small>
+      </div>
+      <span class="material-symbols-outlined arrow-icon">arrow_forward</span>
+      <select class="mapping-select field-map" data-field-id="${esc(field.id)}">
+        ${options}
+      </select>`;
+    container.appendChild(div);
+  });
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = String(s || '');
+  return d.innerHTML;
+}
+
+/* ─── Generate ───────────────────────────────────────────── */
+async function startGeneration() {
+  // Build mapped records
+  const mappings = [...document.querySelectorAll('.field-map')].map(sel => ({
+    fieldId: sel.dataset.fieldId,
+    colHeader: sel.value,
+  }));
+
+  const records = parsedRows.map(row => {
+    const rec = {};
+    mappings.forEach(m => { if (m.colHeader) rec[m.fieldId] = row[m.colHeader]; });
+    return rec;
+  });
+
+  showStep('generating');
+  $('prog-bar').style.width = '0%';
+  $('prog-pct').textContent = '0%';
+  $('prog-name').textContent = 'Connecting…';
+  $('prog-status').textContent = `Generating ${records.length} certificate${records.length !== 1 ? 's' : ''}…`;
+  $('err-list').innerHTML = '';
+
+  try {
+    const res = await fetch('/api/teacher/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, records }),
+    });
+
+    if (!res.ok) {
+      const e = await res.json().catch(() => ({ detail: 'Generation failed' }));
+      throw new Error(e.detail || 'Generation failed');
+    }
+
+    // ── Parse raw SSE stream ──────────────────────────────
+    // Backend sends: "event: <name>\ndata: <json>\n\n"
+    const reader  = res.body.getReader();
+    const decoder = new TextDecoder();
+    let   buffer  = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      // Split on double newline (SSE event separator)
+      const chunks = buffer.split('\n\n');
+      buffer = chunks.pop(); // Keep incomplete chunk
+
+      for (const chunk of chunks) {
+        if (!chunk.trim()) continue;
+
+        // Parse SSE fields
+        let eventName = '';
+        let dataStr   = '';
+        chunk.split('\n').forEach(line => {
+          if (line.startsWith('event: '))      eventName = line.slice(7).trim();
+          else if (line.startsWith('data: ')) dataStr   = line.slice(6).trim();
+        });
+
+        if (!dataStr) continue;
+        let payload;
+        try { payload = JSON.parse(dataStr); } catch { continue; }
+
+        if (eventName === 'progress') {
+          const pct = payload.percent || 0;
+          $('prog-bar').style.width  = pct + '%';
+          $('prog-pct').textContent  = pct + '%';
+          $('prog-name').textContent = `Processing: ${payload.name || ''}`;
+        } else if (eventName === 'error_item') {
+          const item = document.createElement('div');
+          item.className = 'err-item';
+          item.innerHTML = `<span class="material-symbols-outlined">warning</span><span>${esc(payload.name)}: ${esc(payload.error)}</span>`;
+          $('err-list').appendChild(item);
+        } else if (eventName === 'complete') {
+          $('prog-bar').style.width = '100%';
+          $('prog-pct').textContent = '100%';
+
+          const total = payload.total || records.length;
+          $('done-msg').textContent = `${total} certificate${total !== 1 ? 's' : ''} generated successfully.`;
+
+          if (payload.download_url) {
+            $('download-btn').href = payload.download_url;
+          }
+          setTimeout(() => showStep('done'), 400);
+          return;
+        }
+      }
+    }
+  } catch (err) {
+    showError(err.message);
+  }
+}
+
+/* ─── Boot ───────────────────────────────────────────────── */
+init();
+</script>
+</body>
+</html>

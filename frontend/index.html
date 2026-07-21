@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CertiGen Admin Dashboard</title>
+<meta name="description" content="CertiGen admin dashboard — manage events, teachers, and certificate generation.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --brand:#6D28D9;--brand-light:#EDE9FE;--brand-dark:#5b21b6;
+    --blue:#2563EB;--blue-light:#EFF6FF;
+    --gold:#c8a45c;--gold-dark:#b08d4b;
+    --red:#EF4444;--red-light:#FEF2F2;
+    --green:#22C55E;--green-light:#F0FDF4;
+    --gray-50:#F9FAFB;--gray-100:#F3F4F6;--gray-200:#E5E7EB;
+    --gray-300:#D1D5DB;--gray-400:#9CA3AF;--gray-500:#6B7280;
+    --gray-600:#4B5563;--gray-700:#374151;--gray-800:#1F2937;--gray-900:#111827;
+    --sidebar-w:240px;
+    --radius:8px;--radius-lg:12px;--radius-xl:16px;
+    --shadow-sm:0 1px 3px rgba(0,0,0,.08);
+    --shadow:0 4px 12px rgba(0,0,0,.1);
+  }
+  body{font-family:'Inter',sans-serif;background:#FAFAFB;color:var(--gray-900);display:flex;height:100vh;overflow:hidden;}
+  main{height:100vh;}
+
+  /* ── Sidebar ─────────────────────────────────────────── */
+  aside{width:var(--sidebar-w);background:#fff;border-right:1px solid var(--gray-200);display:flex;flex-direction:column;flex-shrink:0;}
+  .sidebar-logo{height:60px;display:flex;align-items:center;gap:8px;padding:0 20px;border-bottom:1px solid var(--gray-200);}
+  .sidebar-logo .logo-icon{color:var(--brand);font-size:26px;}
+  .sidebar-logo span{font-size:18px;font-weight:700;color:var(--brand);}
+  .sidebar-nav{padding:16px 12px;flex:1;display:flex;flex-direction:column;gap:4px;}
+  .nav-btn{width:100%;display:flex;align-items:center;gap:10px;padding:9px 12px;border:none;background:transparent;border-radius:var(--radius);cursor:pointer;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--gray-600);transition:all .15s;text-align:left;}
+  .nav-btn:hover{background:var(--gray-100);color:var(--gray-900);}
+  .nav-btn.active{background:var(--brand-light);color:var(--brand);font-weight:600;}
+  .nav-btn .material-symbols-outlined{font-size:20px;color:var(--gray-400);}
+  .nav-btn.active .material-symbols-outlined{color:var(--brand);}
+  .sidebar-footer{padding:12px;border-top:1px solid var(--gray-200);}
+
+  /* ── Main ────────────────────────────────────────────── */
+  main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;}
+  .view{display:none;flex:1;overflow-y:auto;}
+  .view.active{display:flex;flex-direction:column;}
+  .view-inner{padding:32px;flex:1;}
+  .designer-view{display:none;flex:1;min-height:0;}
+  .designer-view.active{display:flex;}
+
+  /* ── Page Header ─────────────────────────────────────── */
+  .page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;}
+  .page-title{font-size:22px;font-weight:700;color:var(--gray-900);line-height:1.2;}
+  .page-sub{font-size:13px;color:var(--gray-500);margin-top:3px;}
+
+  /* ── Buttons ─────────────────────────────────────────── */
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;font-family:'Inter',sans-serif;}
+  .btn-primary{background:var(--blue);color:#fff;}
+  .btn-primary:hover{background:#1d4ed8;}
+  .btn-brand{background:var(--brand);color:#fff;}
+  .btn-brand:hover{background:var(--brand-dark);}
+  .btn-gold{background:var(--gold);color:#fff;}
+  .btn-gold:hover{background:var(--gold-dark);}
+  .btn-outline{background:#fff;color:var(--gray-700);border:1px solid var(--gray-200);}
+  .btn-outline:hover{background:var(--gray-50);}
+  .btn-danger{background:var(--red-light);color:var(--red);border:1px solid #fecaca;}
+  .btn-danger:hover{background:#fee2e2;}
+  .btn-sm{padding:5px 12px;font-size:12px;}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+  .btn .material-symbols-outlined{font-size:16px;}
+  .btn-icon{width:32px;height:32px;padding:0;justify-content:center;border-radius:6px;border:1px solid var(--gray-200);background:#fff;color:var(--gray-600);cursor:pointer;display:inline-flex;align-items:center;transition:all .15s;}
+  .btn-icon:hover{background:var(--gray-100);}
+  .btn-icon .material-symbols-outlined{font-size:16px;}
+
+  /* ── KPI Cards ───────────────────────────────────────── */
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
+  .kpi-card{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow-sm);display:flex;align-items:center;gap:16px;}
+  .kpi-icon{width:44px;height:44px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .kpi-icon .material-symbols-outlined{font-size:22px;}
+  .kpi-value{font-size:26px;font-weight:700;color:var(--gray-900);line-height:1;}
+  .kpi-label{font-size:11px;font-weight:600;color:var(--gray-500);text-transform:uppercase;letter-spacing:.5px;margin-top:3px;}
+
+  /* ── Cards / Tables ──────────────────────────────────── */
+  .card{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:hidden;}
+  .card-header{padding:16px 20px;border-bottom:1px solid var(--gray-200);background:var(--gray-50);display:flex;justify-content:space-between;align-items:center;}
+  .card-title{font-size:14px;font-weight:600;color:var(--gray-700);}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead th{padding:10px 16px;text-align:left;font-weight:600;color:var(--gray-500);font-size:11px;text-transform:uppercase;letter-spacing:.4px;background:var(--gray-50);border-bottom:1px solid var(--gray-200);}
+  tbody tr{border-bottom:1px solid var(--gray-100);transition:background .1s;}
+  tbody tr:hover{background:var(--gray-50);}
+  tbody td{padding:12px 16px;color:var(--gray-700);}
+  tbody tr:last-child{border-bottom:none;}
+
+  /* ── Status Badges ───────────────────────────────────── */
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:99px;font-size:11px;font-weight:600;}
+  .badge-green{background:var(--green-light);color:#15803d;}
+  .badge-yellow{background:#fef9c3;color:#854d0e;}
+  .badge-gray{background:var(--gray-100);color:var(--gray-600);}
+
+  /* ── Events list row ─────────────────────────────────── */
+  .event-row{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--gray-100);transition:background .1s;}
+  .event-row:hover{background:var(--gray-50);}
+  .event-row:last-child{border-bottom:none;}
+  .event-thumb{width:60px;height:42px;border-radius:6px;object-fit:cover;border:1px solid var(--gray-200);flex-shrink:0;background:var(--gray-100);}
+  .event-thumb-placeholder{width:60px;height:42px;border-radius:6px;border:1px solid var(--gray-200);background:var(--gray-100);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .event-thumb-placeholder .material-symbols-outlined{font-size:18px;color:var(--gray-400);}
+  .event-info{margin-left:14px;flex:1;}
+  .event-name{font-size:14px;font-weight:600;color:var(--gray-900);}
+  .event-meta{font-size:12px;color:var(--gray-500);margin-top:2px;display:flex;gap:12px;}
+  .event-actions{display:flex;align-items:center;gap:8px;}
+
+  /* ── Filters / Search ────────────────────────────────── */
+  .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .search-box{position:relative;}
+  .search-box .material-symbols-outlined{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--gray-400);}
+  .search-box input{padding:8px 12px 8px 34px;border:1px solid var(--gray-200);border-radius:var(--radius);font-size:13px;width:220px;outline:none;background:#fff;}
+  .search-box input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1);}
+
+  /* ── Modals ──────────────────────────────────────────── */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px);}
+  .modal-backdrop.open{display:flex;}
+  .modal{background:#fff;border-radius:var(--radius-xl);width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:slideUp .2s ease;}
+  .modal-lg{max-width:560px;}
+  @keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  .modal-header{padding:20px 24px 0;display:flex;justify-content:space-between;align-items:center;}
+  .modal-header h3{font-size:16px;font-weight:700;color:var(--gray-900);}
+  .modal-close{background:none;border:none;cursor:pointer;color:var(--gray-400);display:flex;padding:4px;border-radius:6px;}
+  .modal-close:hover{background:var(--gray-100);color:var(--gray-700);}
+  .modal-body{padding:20px 24px;}
+  .modal-footer{padding:0 24px 20px;display:flex;justify-content:flex-end;gap:10px;}
+
+  /* ── Form elements ───────────────────────────────────── */
+  .form-group{margin-bottom:16px;}
+  .form-label{display:block;font-size:12px;font-weight:600;color:var(--gray-600);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;}
+  .form-input{width:100%;padding:9px 12px;border:1px solid var(--gray-200);border-radius:var(--radius);font-size:14px;font-family:'Inter',sans-serif;outline:none;color:var(--gray-900);background:#fff;transition:border-color .15s,box-shadow .15s;}
+  .form-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1);}
+  .form-input.error{border-color:var(--red);}
+  select.form-input{cursor:pointer;}
+
+  /* ── Toast ───────────────────────────────────────────── */
+  #toast-container{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+  .toast{display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;box-shadow:var(--shadow);animation:toastIn .25s ease;pointer-events:all;max-width:340px;}
+  .toast-success{background:#fff;border-left:4px solid var(--green);color:var(--gray-800);}
+  .toast-error{background:#fff;border-left:4px solid var(--red);color:var(--gray-800);}
+  .toast-info{background:#fff;border-left:4px solid var(--blue);color:var(--gray-800);}
+  .toast .material-symbols-outlined{font-size:18px;}
+  .toast-success .material-symbols-outlined{color:var(--green);}
+  .toast-error .material-symbols-outlined{color:var(--red);}
+  .toast-info .material-symbols-outlined{color:var(--blue);}
+  @keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+  /* ── Designer ────────────────────────────────────────── */
+  .designer-sidebar{width:280px;border-right:1px solid var(--gray-200);background:#fff;display:flex;flex-direction:column;flex-shrink:0;height:100%;min-height:0;}
+  .designer-sidebar-inner{flex:1;overflow-y:auto;padding:16px;}
+  .designer-sidebar-footer{padding:16px;border-top:1px solid var(--gray-200);background:var(--gray-50);}
+  .designer-canvas-area{flex:1;background:var(--gray-100);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;}
+  #cert-canvas-d{max-width:100%;max-height:100%;cursor:crosshair;box-shadow:var(--shadow);}
+  .designer-sub-label{font-size:11px;font-weight:600;color:var(--gray-500);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;}
+  .field-pill{padding:4px 10px;background:var(--gray-100);border-radius:99px;font-size:12px;cursor:pointer;border:1px solid transparent;transition:all .15s;}
+  .field-pill.active{background:var(--brand-light);color:var(--brand);border-color:var(--brand);}
+  .align-btn{flex:1;padding:6px 0;border:1px solid var(--gray-200);background:#fff;font-size:12px;cursor:pointer;transition:all .15s;}
+  .align-btn:first-child{border-radius:6px 0 0 6px;}
+  .align-btn:last-child{border-radius:0 6px 6px 0;}
+  .align-btn.active{background:var(--gray-900);color:#fff;border-color:var(--gray-900);}
+  .range-row{display:flex;align-items:center;gap:8px;}
+  .range-row input[type=range]{flex:1;}
+  .range-val{width:50px;text-align:center;padding:4px 6px;border:1px solid var(--gray-200);border-radius:6px;font-size:12px;}
+
+  /* ── Drop zone ───────────────────────────────────────── */
+  .drop-zone{border:2px dashed var(--gray-300);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;position:relative;background:#fff;transition:all .2s;width:100%;height:100%;}
+  .drop-zone.drag-over{border-color:var(--blue);background:var(--blue-light);}
+  .canvas-wrapper{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;display:none;}
+  .canvas-wrapper.visible{display:flex;}
+
+  /* ── Students sub-panel ──────────────────────────────── */
+  #students-panel{display:none;margin-top:16px;}
+  #students-panel.visible{display:block;}
+
+  /* ── Empty state ─────────────────────────────────────── */
+  .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;color:var(--gray-500);}
+  .empty-state .material-symbols-outlined{font-size:48px;margin-bottom:12px;color:var(--gray-300);}
+  .empty-state p{font-size:14px;}
+
+  /* ── Misc ────────────────────────────────────────────── */
+  .separator{height:1px;background:var(--gray-200);margin:12px 0;}
+  .tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500;}
+  .shimmer{background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;}
+  @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+  .spin{animation:spin 1.5s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .pos-row{display:flex;gap:8px;}
+  .pos-row .form-group{flex:1;margin-bottom:0;}
+
+  /* confirm delete modal */
+  #confirm-modal .modal-body p{font-size:14px;color:var(--gray-600);line-height:1.6;}
+  #confirm-modal .modal-footer{gap:8px;}
+</style>
+</head>
+<body>
+
+<!-- ─── Sidebar ──────────────────────────────────────────── -->
+<aside>
+  <div class="sidebar-logo">
+    <span class="material-symbols-outlined logo-icon">verified</span>
+    <span>CertiGen</span>
+  </div>
+  <nav class="sidebar-nav">
+    <button class="nav-btn active" id="nav-events" onclick="showView('events')">
+      <span class="material-symbols-outlined">calendar_month</span>Events
+    </button>
+    <button class="nav-btn" id="nav-settings" onclick="showView('settings')">
+      <span class="material-symbols-outlined">settings</span>Settings
+    </button>
+  </nav>
+  <div class="sidebar-footer"></div>
+</aside>
+
+<!-- ─── Main ──────────────────────────────────────────────── -->
+<main id="main">
+
+  <!-- == EVENTS VIEW ======================================= -->
+  <div class="view active" id="view-events">
+    <div class="view-inner">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Dashboard</h1>
+          <p class="page-sub">Manage certificate events and teacher magic links.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openDesigner(null)">
+          <span class="material-symbols-outlined">add</span>Create Event
+        </button>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:#EFF6FF"><span class="material-symbols-outlined" style="color:#3B82F6">calendar_today</span></div>
+          <div><div class="kpi-value" id="kpi-events">—</div><div class="kpi-label">Total Events</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:#F5F3FF"><span class="material-symbols-outlined" style="color:#8B5CF6">link</span></div>
+          <div><div class="kpi-value" id="kpi-links">—</div><div class="kpi-label">Links Sent</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:#F0FDF4"><span class="material-symbols-outlined" style="color:#22C55E">description</span></div>
+          <div><div class="kpi-value" id="kpi-submissions">—</div><div class="kpi-label">Submissions</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:#FEFCE8"><span class="material-symbols-outlined" style="color:#EAB308">military_tech</span></div>
+          <div><div class="kpi-value" id="kpi-certs">—</div><div class="kpi-label">Certs Generated</div></div>
+        </div>
+      </div>
+
+      <!-- Events List -->
+      <div class="toolbar">
+        <span id="events-count-label" style="font-size:13px;color:var(--gray-500);font-weight:500;">Loading events...</span>
+        <div class="search-box">
+          <span class="material-symbols-outlined">search</span>
+          <input type="text" id="event-search" placeholder="Search events…" oninput="filterEvents()">
+        </div>
+      </div>
+
+      <div class="card">
+        <div id="events-list">
+          <div class="empty-state" id="events-loading">
+            <span class="material-symbols-outlined spin">progress_activity</span>
+            <p>Loading events…</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- == DESIGNER VIEW ===================================== -->
+  <div class="designer-view" id="view-designer">
+    <!-- Sidebar controls -->
+    <div class="designer-sidebar">
+      <div class="designer-sidebar-inner">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+          <button class="btn btn-outline btn-sm" onclick="closeDesigner()">
+            <span class="material-symbols-outlined">arrow_back</span>Back
+          </button>
+          <span style="font-size:14px;font-weight:600;color:var(--gray-800)" id="designer-title">New Event</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Event Name</label>
+          <input class="form-input" id="ev-name" placeholder="e.g. Science Fair 2026">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Google Form Sheet ID <span style="color:var(--gray-400);font-weight:400;text-transform:none">(optional)</span></label>
+          <input class="form-input" id="ev-sheet" placeholder="Spreadsheet ID for auto-watcher">
+        </div>
+
+        <div class="separator"></div>
+
+        <!-- Fields -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <span class="designer-sub-label">Certificate Fields</span>
+          <button class="btn btn-outline btn-sm" onclick="addField()">
+            <span class="material-symbols-outlined">add</span>Add
+          </button>
+        </div>
+
+        <div id="field-pills" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;"></div>
+
+        <!-- Field Properties -->
+        <div id="field-props" style="display:none;">
+          <div class="separator"></div>
+          <div class="form-group">
+            <label class="form-label">Field ID <span style="color:var(--gray-400);font-weight:400;text-transform:none">(column header in CSV)</span></label>
+            <input class="form-input" id="fp-id" placeholder="e.g. student_name">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Preview Text</label>
+            <input class="form-input" id="fp-sample" placeholder="John Smith">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Font</label>
+            <select class="form-input" id="fp-family">
+              <option value="Great Vibes">Great Vibes (Cursive)</option>
+              <option value="Inter">Inter (Sans-serif)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Font Size</label>
+            <div class="range-row">
+              <input type="range" id="fp-size-range" min="12" max="200" value="72">
+              <input type="number" class="range-val" id="fp-size-num" value="72">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Color</label>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="color" id="fp-color" value="#1a1a1a" style="width:36px;height:36px;border:1px solid var(--gray-200);border-radius:6px;cursor:pointer;padding:2px;">
+              <code id="fp-color-hex" style="font-size:12px;color:var(--gray-600)">#1A1A1A</code>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Alignment</label>
+            <div style="display:flex;">
+              <button class="align-btn" data-align="left" onclick="setAlign('left')">Left</button>
+              <button class="align-btn active" data-align="center" onclick="setAlign('center')">Center</button>
+              <button class="align-btn" data-align="right" onclick="setAlign('right')">Right</button>
+            </div>
+          </div>
+          <div class="pos-row">
+            <div class="form-group">
+              <label class="form-label">X %</label>
+              <input class="form-input" id="fp-x" type="number" step="0.1" min="0" max="100">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Y %</label>
+              <input class="form-input" id="fp-y" type="number" step="0.1" min="0" max="100">
+            </div>
+          </div>
+          <button class="btn btn-danger btn-sm" style="width:100%;justify-content:center;margin-top:4px;" onclick="removeField()">
+            <span class="material-symbols-outlined">delete</span>Remove Field
+          </button>
+        </div>
+      </div>
+
+      <div class="designer-sidebar-footer">
+        <button class="btn btn-gold" style="width:100%;justify-content:center;" id="btn-publish" onclick="publishEvent()">
+          <span class="material-symbols-outlined">cloud_upload</span><span id="btn-publish-label">Save Event</span>
+        </button>
+        <p style="font-size:12px;text-align:center;margin-top:8px;min-height:18px;transition:opacity .2s;" id="publish-status"></p>
+      </div>
+    </div>
+
+    <!-- Canvas Area -->
+    <div class="designer-canvas-area">
+      <input type="file" id="file-upload" accept="image/*" style="display:none">
+      <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-upload').click()">
+        <div id="canvas-empty-state" style="text-align:center;padding:40px;">
+          <div style="width:64px;height:64px;background:var(--blue-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+            <span class="material-symbols-outlined" style="font-size:32px;color:var(--blue)">upload_file</span>
+          </div>
+          <p style="font-size:15px;font-weight:600;color:var(--gray-800);margin-bottom:6px;">Upload Certificate Template</p>
+          <p style="font-size:13px;color:var(--gray-500);">Drag & drop or click to choose an image (PNG / JPG)</p>
+        </div>
+        <div class="canvas-wrapper" id="canvas-wrapper">
+          <canvas id="cert-canvas-d"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- == SETTINGS VIEW ===================================== -->
+  <div class="view" id="view-settings">
+    <div class="view-inner" style="max-width:600px;">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Settings</h1>
+          <p class="page-sub">Configure SMTP and form watcher settings.</p>
+        </div>
+      </div>
+
+      <div class="card" style="padding:24px;">
+        <div class="form-group">
+          <label class="form-label">Sender Email</label>
+          <input class="form-input" id="cfg-sender-email" type="email" placeholder="admin@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Password (App Password)</label>
+          <input class="form-input" id="cfg-sender-password" type="password" placeholder="SMTP Password">
+        </div>
+        <div class="form-group">
+          <label class="form-label">SMTP Host</label>
+          <input class="form-input" id="cfg-smtp-host" placeholder="smtp.hostinger.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">SMTP Port</label>
+          <input class="form-input" id="cfg-smtp-port" type="number" value="465">
+        </div>
+        <div class="separator"></div>
+        <div class="form-group">
+          <label class="form-label">Form Poll Interval (seconds)</label>
+          <input class="form-input" id="cfg-poll-interval" type="number" value="30">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Public Base URL <span style="color:var(--gray-400);font-weight:400;text-transform:none">(for magic link emails)</span></label>
+          <input class="form-input" id="cfg-public-url" placeholder="https://your-domain.com">
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="saveConfig()">
+          <span class="material-symbols-outlined">save</span>Save Settings
+        </button>
+        <p id="cfg-status" style="font-size:12px;text-align:center;margin-top:10px;min-height:18px;"></p>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ─── Send Link Modal ────────────────────────────────────── -->
+<div class="modal-backdrop" id="modal-link">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Send Magic Link</h3>
+      <button class="modal-close" onclick="closeModal('modal-link')"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px;">The teacher will receive an email with a one-time link to upload their student list and generate certificates.</p>
+      <div class="form-group">
+        <label class="form-label">Teacher Name</label>
+        <input class="form-input" id="link-teacher-name" placeholder="e.g. Ms. Johnson">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Teacher Email</label>
+        <input class="form-input" id="link-teacher-email" type="email" placeholder="teacher@school.edu">
+      </div>
+      <p id="link-error" style="font-size:12px;color:var(--red);min-height:18px;margin-top:4px;"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-link')">Cancel</button>
+      <button class="btn btn-primary" id="btn-send-link" onclick="submitSendLink()">
+        <span class="material-symbols-outlined">send</span>Send Link
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Confirm Delete Modal ───────────────────────────────── -->
+<div class="modal-backdrop" id="confirm-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Delete Event</h3>
+      <button class="modal-close" onclick="closeModal('confirm-modal')"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div class="modal-body">
+      <p>Are you sure you want to delete <strong id="confirm-event-name"></strong>? This will also remove the certificate template from storage. This action cannot be undone.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('confirm-modal')">Cancel</button>
+      <button class="btn" style="background:var(--red);color:#fff;" id="btn-confirm-delete" onclick="confirmDelete()">
+        <span class="material-symbols-outlined">delete</span>Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Toast Container ────────────────────────────────────── -->
+<div id="toast-container"></div>
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<script>
+'use strict';
+
+/* =========================================================
+   UTILITIES
+   ========================================================= */
+function toast(msg, type = 'info') {
+  const icons = { success: 'check_circle', error: 'error', info: 'info' };
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.innerHTML = `<span class="material-symbols-outlined">${icons[type] || 'info'}</span><span>${msg}</span>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = String(s || '');
+  return d.innerHTML;
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+/* =========================================================
+   VIEW ROUTER
+   ========================================================= */
+const NAV_VIEWS = {
+  events: 'view-events',
+  teachers: 'view-teachers',
+  settings: 'view-settings',
+};
+
+function showView(name) {
+  // Hide all standard views + designer
+  Object.values(NAV_VIEWS).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+  document.getElementById('view-designer').classList.remove('active');
+
+  // Update nav
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const navEl = document.getElementById('nav-' + name);
+  if (navEl) navEl.classList.add('active');
+
+  // Show target
+  const target = document.getElementById(NAV_VIEWS[name]);
+  if (target) target.classList.add('active');
+
+  // Side effects
+  if (name === 'teachers') loadTeachers();
+  if (name === 'settings') loadConfig();
+}
+
+/* =========================================================
+   DASHBOARD / EVENTS
+   ========================================================= */
+let allEvents = [];
+
+async function loadDashboard() {
+  // Stats
+  try {
+    const r = await fetch('/api/admin/stats');
+    if (r.ok) {
+      const s = await r.json();
+      document.getElementById('kpi-events').textContent      = s.total_events ?? '—';
+      document.getElementById('kpi-links').textContent       = s.magic_links_sent ?? '—';
+      document.getElementById('kpi-submissions').textContent = s.submissions ?? '—';
+      document.getElementById('kpi-certs').textContent       = s.certificates_generated ?? '—';
+    }
+  } catch (e) { console.error('Stats load failed', e); }
+
+  // Events
+  try {
+    const r = await fetch('/api/events');
+    if (!r.ok) throw new Error('Failed to load events');
+    const data = await r.json();
+    allEvents = data.events || [];
+    renderEvents(allEvents);
+  } catch (e) {
+    document.getElementById('events-list').innerHTML =
+      `<div class="empty-state"><span class="material-symbols-outlined">error</span><p>Failed to load events: ${esc(e.message)}</p></div>`;
+  }
+}
+
+function renderEvents(events) {
+  const container = document.getElementById('events-list');
+  const label = document.getElementById('events-count-label');
+  label.textContent = `${events.length} event${events.length !== 1 ? 's' : ''}`;
+
+  if (events.length === 0) {
+    container.innerHTML = `<div class="empty-state"><span class="material-symbols-outlined">calendar_month</span><p>No events yet. Click <strong>Create Event</strong> to get started.</p></div>`;
+    return;
+  }
+
+  container.innerHTML = events.map(ev => {
+    const thumb = ev.template_url
+      ? `<img src="${esc(ev.template_url)}" class="event-thumb" alt="template">`
+      : `<div class="event-thumb-placeholder"><span class="material-symbols-outlined">image</span></div>`;
+
+    const cfg = ev.config_json || {};
+    const fieldCount = (cfg.fields || []).length;
+    const linksUsed = ev.links_used || 0;
+    const linksSent = ev.links_sent || 0;
+    const certCount = cfg.generated_count || 0;
+
+    return `<div class="event-row" id="ev-row-${esc(ev.id)}" style="cursor:pointer" onclick="window.location.href='manage-teachers.html?eventId=${esc(ev.id)}'">
+      <div style="display:flex;align-items:center;flex:1;min-width:0;">
+        ${thumb}
+        <div class="event-info">
+          <div class="event-name">${esc(ev.name)}</div>
+          <div class="event-meta">
+            <span><span class="material-symbols-outlined" style="font-size:13px;vertical-align:middle">view_column</span> ${fieldCount} field${fieldCount !== 1 ? 's' : ''}</span>
+            <span><span class="material-symbols-outlined" style="font-size:13px;vertical-align:middle">link</span> ${linksSent} link${linksSent !== 1 ? 's' : ''} sent</span>
+            <span><span class="material-symbols-outlined" style="font-size:13px;vertical-align:middle">military_tech</span> ${certCount} generated</span>
+            <span>Created ${fmtDate(ev.created_at)}</span>
+          </div>
+        </div>
+      </div>
+      <div class="event-actions">
+        <button class="btn btn-outline btn-sm" title="Send Magic Link to Teacher" onclick="event.stopPropagation(); openSendLink('${esc(ev.id)}','${esc(ev.name)}')">
+          <span class="material-symbols-outlined">send</span>Send Link
+        </button>
+        <button class="btn-icon" title="Edit Event" onclick="event.stopPropagation(); openDesigner('${esc(ev.id)}')">
+          <span class="material-symbols-outlined">edit</span>
+        </button>
+        <button class="btn-icon" title="Delete Event" style="color:var(--red);border-color:#fecaca;" onclick="event.stopPropagation(); askDelete('${esc(ev.id)}','${esc(ev.name)}')">
+          <span class="material-symbols-outlined">delete</span>
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterEvents() {
+  const q = document.getElementById('event-search').value.trim().toLowerCase();
+  renderEvents(q ? allEvents.filter(e => e.name.toLowerCase().includes(q)) : allEvents);
+}
+
+/* =========================================================
+   SEND LINK MODAL
+   ========================================================= */
+let _linkEventId = null;
+
+function openSendLink(eventId, eventName) {
+  _linkEventId = eventId;
+  document.getElementById('link-teacher-name').value  = '';
+  document.getElementById('link-teacher-email').value = '';
+  document.getElementById('link-error').textContent   = '';
+  document.querySelector('#modal-link .modal-header h3').textContent = `Send Link — ${eventName}`;
+  openModal('modal-link');
+}
+
+async function submitSendLink() {
+  const name  = document.getElementById('link-teacher-name').value.trim();
+  const email = document.getElementById('link-teacher-email').value.trim();
+  const errEl = document.getElementById('link-error');
+  if (!email) { errEl.textContent = 'Email is required.'; return; }
+
+  const btn = document.getElementById('btn-send-link');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="material-symbols-outlined spin">progress_activity</span>Sending…';
+  errEl.textContent = '';
+
+  try {
+    const r = await fetch('/api/admin/link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event_id: _linkEventId, teacher_name: name, teacher_email: email }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || 'Failed to send link');
+    closeModal('modal-link');
+    toast(`Magic link sent to ${email}`, 'success');
+    loadDashboard();
+  } catch (e) {
+    errEl.textContent = e.message;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span class="material-symbols-outlined">send</span>Send Link';
+  }
+}
+
+/* =========================================================
+   DELETE EVENT
+   ========================================================= */
+let _deleteEventId = null;
+
+function askDelete(id, name) {
+  _deleteEventId = id;
+  document.getElementById('confirm-event-name').textContent = name;
+  openModal('confirm-modal');
+}
+
+async function confirmDelete() {
+  if (!_deleteEventId) return;
+  const btn = document.getElementById('btn-confirm-delete');
+  btn.disabled = true;
+  btn.textContent = 'Deleting…';
+  try {
+    const r = await fetch(`/api/events/${_deleteEventId}`, { method: 'DELETE' });
+    if (!r.ok) {
+      let detail = 'Delete failed';
+      try { const e = await r.json(); detail = e.detail || detail; } catch (_) {}
+      throw new Error(detail);
+    }
+    closeModal('confirm-modal');
+    toast('Event deleted', 'success');
+    loadDashboard();
+  } catch (e) {
+    toast(e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span class="material-symbols-outlined">delete</span>Delete';
+  }
+}
+
+/* =========================================================
+   DESIGNER
+   ========================================================= */
+const DS = {
+  currentEventId: null,
+  bgImage: null,
+  imgW: 0,
+  imgH: 0,
+  isDragging: false,
+  uploadedFile: null,
+  fields: [],
+  selectedIdx: 0,
+};
+
+function openDesigner(eventId) {
+  // Hide standard views, show designer
+  Object.values(NAV_VIEWS).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+  document.getElementById('view-designer').classList.add('active');
+
+  if (eventId) {
+    const ev = allEvents.find(e => e.id === eventId);
+    if (ev) loadDesignerEvent(ev);
+  } else {
+    resetDesigner();
+  }
+}
+
+function closeDesigner() {
+  document.getElementById('view-designer').classList.remove('active');
+  document.getElementById('view-events').classList.add('active');
+  document.getElementById('nav-events').classList.add('active');
+}
+
+function resetDesigner() {
+  DS.currentEventId = null;
+  DS.bgImage = null;
+  DS.imgW = 0;
+  DS.imgH = 0;
+  DS.uploadedFile = null;
+  DS.fields = [
+    { id: 'student_name', sample: 'John Smith', x: 50, y: 50, fontFamily: 'Great Vibes', fontSize: 72, fontColor: '#1a1a1a', textAlign: 'center' }
+  ];
+  DS.selectedIdx = 0;
+
+  document.getElementById('ev-name').value    = '';
+  document.getElementById('ev-sheet').value   = '';
+  document.getElementById('designer-title').textContent  = 'New Event';
+  document.getElementById('btn-publish-label').textContent = 'Save Event';
+  document.getElementById('publish-status').textContent  = '';
+  document.getElementById('canvas-empty-state').style.display = 'block';
+  document.getElementById('canvas-wrapper').classList.remove('visible');
+  document.getElementById('drop-zone').style.cursor = 'pointer';
+
+  updatePills();
+  updatePropInputs();
+}
+
+function loadDesignerEvent(ev) {
+  DS.currentEventId = ev.id;
+  document.getElementById('ev-name').value   = ev.name || '';
+  document.getElementById('designer-title').textContent = 'Edit Event';
+  document.getElementById('btn-publish-label').textContent = 'Update Event';
+
+  const cfg = ev.config_json || {};
+  document.getElementById('ev-sheet').value = cfg.form_sheet_id || '';
+
+  if (cfg.fields && cfg.fields.length) {
+    DS.fields = cfg.fields;
+  } else if (cfg.text) {
+    const t = cfg.text;
+    DS.fields = [{ id: 'student_name', sample: 'Sample Text', x: t.x || 50, y: t.y || 50, fontFamily: t.fontFamily || 'Great Vibes', fontSize: t.fontSize || 72, fontColor: t.fontColor || '#1a1a1a', textAlign: t.textAlign || 'center' }];
+  } else {
+    DS.fields = [{ id: 'student_name', sample: 'John Smith', x: 50, y: 50, fontFamily: 'Great Vibes', fontSize: 72, fontColor: '#1a1a1a', textAlign: 'center' }];
+  }
+  DS.selectedIdx = 0;
+
+  if (ev.template_url) {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = () => {
+      DS.bgImage = img; DS.imgW = img.naturalWidth; DS.imgH = img.naturalHeight;
+      document.getElementById('canvas-empty-state').style.display = 'none';
+      document.getElementById('canvas-wrapper').classList.add('visible');
+      resizeCanvas();
+      renderCanvas();
+    };
+    img.onerror = () => { DS.bgImage = null; };
+    img.src = ev.template_url;
+  } else {
+    DS.bgImage = null;
+    document.getElementById('canvas-empty-state').style.display = 'block';
+    document.getElementById('canvas-wrapper').classList.remove('visible');
+  }
+
+  updatePills();
+  updatePropInputs();
+}
+
+/* ── Field Management ───────────────────────────── */
+function updatePills() {
+  const container = document.getElementById('field-pills');
+  container.innerHTML = DS.fields.map((f, i) =>
+    `<span class="field-pill ${i === DS.selectedIdx ? 'active' : ''}" onclick="selectField(${i})">${esc(f.id || 'Unnamed')}</span>`
+  ).join('');
+  document.getElementById('field-props').style.display = DS.fields.length ? 'block' : 'none';
+}
+
+function selectField(idx) {
+  DS.selectedIdx = idx;
+  updatePills();
+  updatePropInputs();
+  renderCanvas();
+}
+
+function addField() {
+  DS.fields.push({ id: 'field_' + DS.fields.length, sample: 'Sample Text', x: 50, y: 60, fontFamily: 'Inter', fontSize: 48, fontColor: '#1a1a1a', textAlign: 'center' });
+  DS.selectedIdx = DS.fields.length - 1;
+  updatePills();
+  updatePropInputs();
+  renderCanvas();
+}
+
+function removeField() {
+  if (DS.fields.length <= 1) { toast('You must have at least one field.', 'error'); return; }
+  DS.fields.splice(DS.selectedIdx, 1);
+  DS.selectedIdx = Math.max(0, DS.selectedIdx - 1);
+  updatePills();
+  updatePropInputs();
+  renderCanvas();
+}
+
+function updatePropInputs() {
+  const f = DS.fields[DS.selectedIdx];
+  if (!f) return;
+  document.getElementById('fp-id').value         = f.id || '';
+  document.getElementById('fp-sample').value     = f.sample || '';
+  document.getElementById('fp-family').value     = f.fontFamily || 'Great Vibes';
+  document.getElementById('fp-size-range').value = f.fontSize || 72;
+  document.getElementById('fp-size-num').value   = f.fontSize || 72;
+  document.getElementById('fp-color').value      = f.fontColor || '#1a1a1a';
+  document.getElementById('fp-color-hex').textContent = (f.fontColor || '#1a1a1a').toUpperCase();
+  document.getElementById('fp-x').value          = (f.x ?? 50).toFixed(1);
+  document.getElementById('fp-y').value          = (f.y ?? 50).toFixed(1);
+  document.querySelectorAll('.align-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.align === (f.textAlign || 'center'));
+  });
+}
+
+function setAlign(align) {
+  const f = DS.fields[DS.selectedIdx]; if (!f) return;
+  f.textAlign = align;
+  document.querySelectorAll('.align-btn').forEach(b => b.classList.toggle('active', b.dataset.align === align));
+  renderCanvas();
+}
+
+// Wire field prop inputs
+['fp-id','fp-sample','fp-x','fp-y'].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('input', () => {
+    const f = DS.fields[DS.selectedIdx]; if (!f) return;
+    if (id === 'fp-id') { f.id = el.value; updatePills(); }
+    else if (id === 'fp-sample') { f.sample = el.value; renderCanvas(); }
+    else if (id === 'fp-x') { f.x = parseFloat(el.value) || 0; renderCanvas(); }
+    else if (id === 'fp-y') { f.y = parseFloat(el.value) || 0; renderCanvas(); }
+  });
+});
+
+document.getElementById('fp-family').addEventListener('change', e => {
+  const f = DS.fields[DS.selectedIdx]; if (f) { f.fontFamily = e.target.value; renderCanvas(); }
+});
+document.getElementById('fp-size-range').addEventListener('input', e => {
+  const f = DS.fields[DS.selectedIdx]; if (!f) return;
+  f.fontSize = parseInt(e.target.value);
+  document.getElementById('fp-size-num').value = f.fontSize;
+  renderCanvas();
+});
+document.getElementById('fp-size-num').addEventListener('change', e => {
+  const f = DS.fields[DS.selectedIdx]; if (!f) return;
+  f.fontSize = parseInt(e.target.value) || 72;
+  document.getElementById('fp-size-range').value = f.fontSize;
+  renderCanvas();
+});
+document.getElementById('fp-color').addEventListener('input', e => {
+  const f = DS.fields[DS.selectedIdx]; if (!f) return;
+  f.fontColor = e.target.value;
+  document.getElementById('fp-color-hex').textContent = f.fontColor.toUpperCase();
+  renderCanvas();
+});
+
+/* ── Canvas ─────────────────────────────────────── */
+const canvas = document.getElementById('cert-canvas-d');
+const ctx    = canvas.getContext('2d');
+
+function resizeCanvas() {
+  if (!DS.bgImage) return;
+  const area = document.getElementById('drop-zone');
+  const areaRect = area.getBoundingClientRect();
+  const maxW = Math.max(areaRect.width - 40, 200);
+  const maxH = Math.max(areaRect.height - 40, 200);
+  const ratio = DS.imgH / DS.imgW;
+  let w = Math.min(maxW, DS.imgW);
+  let h = w * ratio;
+  if (h > maxH) { h = maxH; w = h / ratio; }
+  canvas.width  = DS.imgW;
+  canvas.height = DS.imgH;
+  canvas.style.width  = w + 'px';
+  canvas.style.height = h + 'px';
+  renderCanvas();
+}
+
+function renderCanvas() {
+  if (!DS.bgImage) return;
+  const cw = canvas.width, ch = canvas.height;
+  ctx.clearRect(0, 0, cw, ch);
+  ctx.drawImage(DS.bgImage, 0, 0, cw, ch);
+
+  DS.fields.forEach((f, i) => {
+    const px = ((f.x ?? 50) / 100) * cw;
+    const py = ((f.y ?? 50) / 100) * ch;
+    const fs = ((f.fontSize || 72) / 1000) * cw;
+    ctx.save();
+    ctx.font         = `${fs}px "${f.fontFamily || 'Great Vibes'}", cursive, sans-serif`;
+    ctx.fillStyle    = (f.sample || '').trim() ? (f.fontColor || '#1a1a1a') : '#CBD5E1';
+    ctx.textAlign    = f.textAlign || 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(f.sample || 'Sample Text', px, py);
+    if (i === DS.selectedIdx) {
+      ctx.strokeStyle = 'rgba(99,102,241,0.8)';
+      ctx.lineWidth   = Math.max(2, cw / 300);
+      ctx.beginPath();
+      ctx.moveTo(px - 14, py); ctx.lineTo(px + 14, py);
+      ctx.moveTo(px, py - 14); ctx.lineTo(px, py + 14);
+      ctx.stroke();
+    }
+    ctx.restore();
+  });
+}
+
+// Canvas drag to position field
+canvas.addEventListener('mousedown', () => { DS.isDragging = true; });
+canvas.addEventListener('mousemove', e => {
+  if (!DS.isDragging || !DS.bgImage) return;
+  const f = DS.fields[DS.selectedIdx]; if (!f) return;
+  const rect = canvas.getBoundingClientRect();
+  f.x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+  f.y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
+  document.getElementById('fp-x').value = f.x.toFixed(1);
+  document.getElementById('fp-y').value = f.y.toFixed(1);
+  renderCanvas();
+});
+window.addEventListener('mouseup', () => { DS.isDragging = false; });
+window.addEventListener('resize', () => { if (DS.bgImage) resizeCanvas(); });
+
+// File upload
+const fileInput = document.getElementById('file-upload');
+fileInput.addEventListener('change', e => { if (e.target.files[0]) loadTemplateFile(e.target.files[0]); });
+
+const dz = document.getElementById('drop-zone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) loadTemplateFile(f);
+});
+
+function loadTemplateFile(file) {
+  DS.uploadedFile = file;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      DS.bgImage = img; DS.imgW = img.naturalWidth; DS.imgH = img.naturalHeight;
+      document.getElementById('canvas-empty-state').style.display = 'none';
+      document.getElementById('canvas-wrapper').classList.add('visible');
+      document.getElementById('publish-status').textContent = 'Template loaded ✓';
+      document.getElementById('publish-status').style.color = 'var(--green)';
+      void document.getElementById('cert-canvas-d').offsetHeight;
+      resizeCanvas();
+      renderCanvas();
+    };
+    img.onerror = () => {
+      document.getElementById('publish-status').textContent = 'Failed to load image — try a PNG or JPG';
+      document.getElementById('publish-status').style.color = 'var(--red)';
+    };
+    img.src = ev.target.result;
+  };
+  reader.onerror = () => {
+    document.getElementById('publish-status').textContent = 'Failed to read file';
+    document.getElementById('publish-status').style.color = 'var(--red)';
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ── Publish ─────────────────────────────────────── */
+async function publishEvent() {
+  const name = document.getElementById('ev-name').value.trim();
+  if (!name) { toast('Please enter an event name', 'error'); return; }
+  if (!DS.bgImage && !DS.currentEventId) { toast('Please upload a certificate template', 'error'); return; }
+
+  const btn = document.getElementById('btn-publish');
+  const status = document.getElementById('publish-status');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="material-symbols-outlined spin">progress_activity</span>Saving…';
+  status.textContent = '';
+  status.style.color = 'var(--gray-500)';
+
+  try {
+    const fd = new FormData();
+    fd.append('name', name);
+
+    if (DS.uploadedFile) {
+      fd.append('template', DS.uploadedFile);
+    } else if (!DS.currentEventId) {
+      // Fallback: export canvas as blob
+      const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+      fd.append('template', blob, 'template.png');
+    }
+
+    const formSheetId = document.getElementById('ev-sheet').value.trim();
+    const config = {
+      templateWidth:  DS.imgW || 1920,
+      templateHeight: DS.imgH || 1080,
+      fields: DS.fields,
+      form_sheet_id: formSheetId,
+    };
+    fd.append('config', JSON.stringify(config));
+
+    const url    = DS.currentEventId ? `/api/events/${DS.currentEventId}` : '/api/events';
+    const method = DS.currentEventId ? 'PUT' : 'POST';
+    const r = await fetch(url, { method, body: fd });
+    if (!r.ok) throw new Error((await r.json()).detail || 'Publish failed');
+
+    status.textContent = DS.currentEventId ? 'Updated!' : 'Published!';
+    status.style.color = 'var(--green)';
+    toast(DS.currentEventId ? 'Event updated!' : 'Event published!', 'success');
+    setTimeout(() => { closeDesigner(); loadDashboard(); }, 800);
+  } catch (e) {
+    status.textContent = e.message;
+    status.style.color = 'var(--red)';
+    toast(e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    document.getElementById('btn-publish-label').textContent = DS.currentEventId ? 'Update Event' : 'Save Event';
+    btn.innerHTML = `<span class="material-symbols-outlined">cloud_upload</span><span id="btn-publish-label">${DS.currentEventId ? 'Update Event' : 'Save Event'}</span>`;
+  }
+}
+
+/* =========================================================
+   SETTINGS
+   ========================================================= */
+async function loadConfig() {
+  try {
+    const r = await fetch('/api/admin/config');
+    if (!r.ok) return;
+    const data = await r.json();
+    document.getElementById('cfg-sender-email').value    = data.sender_email    || '';
+    document.getElementById('cfg-sender-password').value = data.sender_password || '';
+    document.getElementById('cfg-smtp-host').value       = data.smtp_host       || 'smtp.hostinger.com';
+    document.getElementById('cfg-smtp-port').value       = data.smtp_port       || '465';
+    document.getElementById('cfg-poll-interval').value   = data.poll_interval   || '30';
+    document.getElementById('cfg-public-url').value      = data.public_url      || '';
+  } catch (e) { console.error('Config load error', e); }
+}
+
+async function saveConfig() {
+  const status = document.getElementById('cfg-status');
+  status.style.color = 'var(--gray-500)';
+  status.textContent = 'Saving…';
+
+  const fields = [
+    { key: 'sender_email',    id: 'cfg-sender-email'    },
+    { key: 'sender_password', id: 'cfg-sender-password' },
+    { key: 'smtp_host',       id: 'cfg-smtp-host'       },
+    { key: 'smtp_port',       id: 'cfg-smtp-port'       },
+    { key: 'poll_interval',   id: 'cfg-poll-interval'   },
+    { key: 'public_url',      id: 'cfg-public-url'      },
+  ];
+
+  try {
+    for (const f of fields) {
+      const val = document.getElementById(f.id).value.trim();
+      const r = await fetch('/api/admin/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: f.key, value: val }),
+      });
+      if (!r.ok) throw new Error(`Failed to save ${f.key}`);
+    }
+    status.style.color = 'var(--green)';
+    status.textContent = 'Settings saved!';
+    toast('Settings saved!', 'success');
+  } catch (e) {
+    status.style.color = 'var(--red)';
+    status.textContent = e.message;
+    toast(e.message, 'error');
+  }
+}
+
+/* =========================================================
+   BOOT
+   ========================================================= */
+resetDesigner();
+loadDashboard();
+</script>
+</body>
+</html>
