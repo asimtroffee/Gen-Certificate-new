@@ -307,6 +307,7 @@ async def create_magic_link(req: CreateLinkRequest):
         raise HTTPException(404, "Event not found")
     event = event_res.data[0]
     event_name = event.get("name", "Event")
+    event_type = event.get("event_type", "student")
 
     token_val = str(uuid.uuid4())
     try:
@@ -326,7 +327,8 @@ async def create_magic_link(req: CreateLinkRequest):
     smtp_cfg["sender_name"] = f"{event_name} <{email_only}>"
 
     base_url = _get_public_url(client)
-    link_url = f"{base_url}/teacher.html?t={token_val}"
+    html_page = "teacher-cert.html" if event_type == "teacher" else "teacher.html"
+    link_url = f"{base_url}/{html_page}?t={token_val}"
     teacher_display = req.teacher_name or "Teacher"
 
     html_msg = f"""
@@ -399,10 +401,11 @@ async def resend_link(req: CreateLinkRequest):
         except Exception as e:
             raise HTTPException(500, f"Failed to create link: {e}")
 
-    event_res = client.table("events").select("name").eq("id", req.event_id).limit(1).execute()
+    event_res = client.table("events").select("name, event_type").eq("id", req.event_id).limit(1).execute()
     if not event_res.data:
         raise HTTPException(404, "Event not found")
     event_name = event_res.data[0]["name"]
+    event_type = event_res.data[0].get("event_type", "student")
 
     smtp_cfg = _get_smtp_config(client)
     raw_sender = smtp_cfg.get("sender_name", "")
@@ -410,7 +413,8 @@ async def resend_link(req: CreateLinkRequest):
     smtp_cfg["sender_name"] = f"{event_name} <{email_only}>"
 
     base_url = _get_public_url(client)
-    link_url = f"{base_url}/teacher.html?t={token_val}"
+    html_page = "teacher-cert.html" if event_type == "teacher" else "teacher.html"
+    link_url = f"{base_url}/{html_page}?t={token_val}"
 
     html_msg = f"""
     <p>Hi <strong>{teacher_name}</strong>,</p>
@@ -468,10 +472,11 @@ async def resend_event_links(req: ResendEventLinksRequest):
     if client is None:
         raise HTTPException(500, "Supabase not configured")
 
-    event_res = client.table("events").select("name").eq("id", req.event_id).limit(1).execute()
+    event_res = client.table("events").select("name, event_type").eq("id", req.event_id).limit(1).execute()
     if not event_res.data:
         raise HTTPException(404, "Event not found")
     event_name = event_res.data[0]["name"]
+    event_type = event_res.data[0].get("event_type", "student")
 
     # Get all pending teachers for this event
     links_res = client.table("teacher_links").select("*").eq("event_id", req.event_id).eq("used", False).execute()
@@ -493,7 +498,8 @@ async def resend_event_links(req: ResendEventLinksRequest):
         token_val = link["token"]
         teacher_email = link["teacher_email"]
         teacher_name = link.get("teacher_name") or "Teacher"
-        link_url = f"{base_url}/teacher.html?t={token_val}"
+        html_page = "teacher-cert.html" if event_type == "teacher" else "teacher.html"
+        link_url = f"{base_url}/{html_page}?t={token_val}"
 
         msg = req.custom_message.replace("{name}", teacher_name)
         custom_html = f"<div style='padding:10px; background:#f5f5f5; border-left:3px solid #0056b3; margin-bottom:15px; white-space: pre-wrap;'><strong>Message from Organizer:</strong><br>{msg}</div>" if msg else ""
