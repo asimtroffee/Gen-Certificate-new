@@ -49,7 +49,7 @@ async def generate_teacher_cert(req: TeacherCertRequest):
     try:
         client.table("teacher_links").update({
             "used": True,
-            "teacher_name": req.teacher_name,
+            "name": req.teacher_name,
             "school": req.school_name,
             "completed_at": datetime.utcnow().isoformat()
         }).eq("token", req.token).execute()
