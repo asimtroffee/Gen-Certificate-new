@@ -1045,7 +1045,22 @@ function loadTemplateFile(file) {
 async function publishEvent() {
   const name = document.getElementById('ev-name').value.trim();
   if (!name) { toast('Please enter an event name', 'error'); return; }
-  if (!DS.bgImage && !DS.currentEventId) { toast('Please upload a certificate template', 'error'); return; }
+  
+  const evType = document.getElementById('ev-type').value;
+  
+  if (evType === 'student' && !DS.bgImage && !DS.currentEventId) { 
+    toast('Please upload a student certificate template', 'error'); 
+    return; 
+  }
+
+  let teacherFile = null;
+  if (evType === 'teacher') {
+    teacherFile = document.getElementById('teacher-file-upload').files[0];
+    if (!teacherFile && !DS.currentEventId) { 
+      toast('Please upload a teacher certificate template', 'error'); 
+      return; 
+    }
+  }
 
   const btn = document.getElementById('btn-publish');
   const status = document.getElementById('publish-status');
@@ -1058,14 +1073,10 @@ async function publishEvent() {
     const fd = new FormData();
     fd.append('name', name);
 
-    const evType = document.getElementById('ev-type').value;
     fd.append('event_type', evType);
 
-    if (evType === 'teacher') {
-      const teacherFile = document.getElementById('teacher-file-upload').files[0];
-      if (teacherFile) {
-        fd.append('teacher_template', teacherFile);
-      }
+    if (evType === 'teacher' && teacherFile) {
+      fd.append('teacher_template', teacherFile);
     }
 
     if (DS.uploadedFile) {
