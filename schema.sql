@@ -60,6 +60,10 @@ ON public.teacher_links FOR UPDATE
 TO public
 USING (true);
 
+-- Migration: Add school and completed_at to teacher_links (added 2026-07-21)
+ALTER TABLE public.teacher_links ADD COLUMN IF NOT EXISTS school TEXT;
+ALTER TABLE public.teacher_links ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP WITH TIME ZONE;
+
 
 -- 3. Create certificates table
 CREATE TABLE IF NOT EXISTS public.certificates (

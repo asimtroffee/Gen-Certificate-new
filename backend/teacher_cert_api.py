@@ -4,6 +4,7 @@ import httpx
 from io import BytesIO
 from PIL import Image
 import uuid
+from datetime import datetime
 
 from .supabase_init import get_client, get_public_url
 from .certificate import generate_certificate
@@ -43,6 +44,17 @@ async def generate_teacher_cert(req: TeacherCertRequest):
         raise HTTPException(400, "No teacher template found for this event")
 
     config = event.get("config_json", {})
+
+    # 2.5 Update the teacher's record in the database
+    try:
+        client.table("teacher_links").update({
+            "used": True,
+            "teacher_name": req.teacher_name,
+            "school": req.school_name,
+            "completed_at": datetime.utcnow().isoformat()
+        }).eq("token", req.token).execute()
+    except Exception as e:
+        print(f"Failed to update teacher record: {e}")
 
     # 3. Download template
     template_url = get_public_url("certificates", template_path)
