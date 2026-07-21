@@ -74,11 +74,15 @@ async def generate_teacher_cert(req: TeacherCertRequest):
     # to whatever the user defined in their config fields.
     data = {
         "Name": req.teacher_name,
+        "name": req.teacher_name,
         "Teacher Name": req.teacher_name,
         "teacher_name": req.teacher_name,
+        "teacher name": req.teacher_name,
         "School": req.school_name,
+        "school": req.school_name,
         "School Name": req.school_name,
-        "school_name": req.school_name
+        "school_name": req.school_name,
+        "school name": req.school_name
     }
 
     try:
