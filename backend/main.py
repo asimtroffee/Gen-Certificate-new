@@ -6,9 +6,9 @@ from pathlib import Path
 from typing import Optional
 
 import httpx
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Query
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response, RedirectResponse, StreamingResponse
+from fastapi.responses import Response, RedirectResponse, StreamingResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from PIL import Image, ImageFont as PILImageFont
@@ -118,6 +118,39 @@ app.include_router(admin_router)
 app.include_router(events_router)
 app.include_router(teacher_router)
 app.include_router(teacher_cert_router)
+
+ADMIN_SECRET = os.environ.get("ADMIN_SECRET", "admin123")
+
+class AdminLoginRequest(BaseModel):
+    password: str
+
+@app.post("/api/admin-login")
+async def admin_login(req: AdminLoginRequest):
+    if req.password == ADMIN_SECRET:
+        res = JSONResponse(content={"ok": True})
+        res.set_cookie(key="admin_token", value="valid", httponly=True, max_age=86400)
+        return res
+    raise HTTPException(status_code=401, detail="Invalid password")
+
+@app.post("/api/admin-logout")
+async def admin_logout():
+    res = JSONResponse(content={"ok": True})
+    res.delete_cookie("admin_token")
+    return res
+
+@app.middleware("http")
+async def admin_auth_middleware(request: Request, call_next):
+    if request.url.path.startswith("/admin") and request.url.path != "/admin/login.html":
+        # Check cookie
+        token = request.cookies.get("admin_token")
+        if token != "valid":
+            return RedirectResponse(url="/login.html", status_code=303)
+    response = await call_next(request)
+    return response
+
+@app.get("/")
+async def root_redirect():
+    return RedirectResponse(url="/login.html")
 
 
 @app.get("/api/config")
@@ -675,12 +708,13 @@ async def watcher_status():
 
 @app.get("/admin")
 async def admin_page():
-    return RedirectResponse(url="/index.html")
+    return RedirectResponse(url="/admin/index.html")
 
+if (FRONTEND_DIR / "admin").exists():
+    app.mount("/admin", StaticFiles(directory=str(FRONTEND_DIR / "admin"), html=True), name="admin")
 
 if FRONTEND_DIR.exists():
     app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
-
 
 if __name__ == "__main__":
     import uvicorn

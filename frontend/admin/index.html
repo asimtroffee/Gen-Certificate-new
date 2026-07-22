@@ -211,7 +211,11 @@
       <span class="material-symbols-outlined">settings</span>Settings
     </button>
   </nav>
-  <div class="sidebar-footer"></div>
+  <div class="sidebar-footer">
+    <button class="nav-btn" style="color:var(--red);" onclick="logoutAdmin()">
+      <span class="material-symbols-outlined">logout</span>Logout
+    </button>
+  </div>
 </aside>
 
 <!-- ─── Main ──────────────────────────────────────────────── -->
@@ -1219,6 +1223,16 @@ async function saveConfig() {
     status.textContent = e.message;
     toast(e.message, 'error');
   }
+}
+
+/* =========================================================
+   LOGOUT
+   ========================================================= */
+async function logoutAdmin() {
+  try {
+    await fetch('/api/admin-logout', { method: 'POST' });
+  } catch(e) {}
+  window.location.href = '/login.html';
 }
 
 /* =========================================================

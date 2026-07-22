@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login - CertiGen</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --brand:#6D28D9;--brand-light:#EDE9FE;--brand-dark:#5b21b6;
+    --gray-50:#F9FAFB;--gray-200:#E5E7EB;--gray-600:#4B5563;--gray-800:#1F2937;--gray-900:#111827;
+    --red:#EF4444;--red-light:#FEF2F2;
+    --radius:8px;
+    --shadow:0 4px 12px rgba(0,0,0,.1);
+  }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #FAFAFB;
+    color: var(--gray-900);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
+  .login-card {
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 40px;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+  }
+  .logo-icon {
+    color: var(--brand);
+    font-size: 48px;
+    margin-bottom: 16px;
+  }
+  h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  p.subtitle {
+    font-size: 14px;
+    color: var(--gray-600);
+    margin-bottom: 24px;
+  }
+  .form-group {
+    margin-bottom: 16px;
+    text-align: left;
+  }
+  .form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-600);
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    margin-bottom: 6px;
+  }
+  .form-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: all .15s;
+  }
+  .form-input:focus {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px var(--brand-light);
+  }
+  .btn-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    background: var(--brand);
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: background .15s;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn-brand:hover {
+    background: var(--brand-dark);
+  }
+  .btn-brand:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+  #error-msg {
+    color: var(--red);
+    font-size: 13px;
+    margin-top: 12px;
+    min-height: 20px;
+  }
+  .spin{animation:spin 1s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+  <div class="login-card">
+    <span class="material-symbols-outlined logo-icon">verified</span>
+    <h1>CertiGen Admin</h1>
+    <p class="subtitle">Enter the admin password to continue.</p>
+    
+    <form id="login-form" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" id="password" class="form-input" placeholder="••••••••" required autofocus>
+      </div>
+      <button type="submit" id="submit-btn" class="btn-brand">
+        Login <span class="material-symbols-outlined" style="font-size: 18px;">arrow_forward</span>
+      </button>
+      <div id="error-msg"></div>
+    </form>
+  </div>
+
+  <script>
+    async function handleLogin(e) {
+      e.preventDefault();
+      const pw = document.getElementById('password').value;
+      const btn = document.getElementById('submit-btn');
+      const err = document.getElementById('error-msg');
+      
+      btn.disabled = true;
+      btn.innerHTML = '<span class="material-symbols-outlined spin">progress_activity</span> Logging in...';
+      err.textContent = '';
+
+      try {
+        const res = await fetch('/api/admin-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pw })
+        });
+        
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.detail || 'Invalid password');
+        }
+        
+        // Success, redirect to the protected admin area
+        window.location.href = '/admin/';
+      } catch (error) {
+        err.textContent = error.message;
+        btn.disabled = false;
+        btn.innerHTML = 'Login <span class="material-symbols-outlined" style="font-size: 18px;">arrow_forward</span>';
+      }
+    }
+  </script>
+</body>
+</html>

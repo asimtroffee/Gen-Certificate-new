@@ -92,9 +92,14 @@
 <body>
 
 <div style="max-width:960px;margin:0 auto;">
-  <a href="index.html" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;font-size:14px;font-weight:500;">
-    <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span>Back to Dashboard
-  </a>
+  <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+    <a href="index.html" style="display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;">
+      <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span>Back to Dashboard
+    </a>
+    <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red-light);" onclick="logoutAdmin()">
+      <span class="material-symbols-outlined" style="font-size:16px;">logout</span>Logout
+    </button>
+  </div>
 
   <div class="page-header">
     <div>
@@ -196,8 +201,26 @@
   const API_BASE = 'https://gen-certificate-new.onrender.com';
   
   // Initialize Quill editor
+  // Initialize Quill editor
   const quill = new Quill('#editor-container', {
     theme: 'snow',
+    placeholder: "Type your custom email here. Use {name} for the teacher's name and {magiclink} to place the portal link.",
+    modules: {
+      toolbar: [
+        ['bold', 'italic', 'underline'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        ['link', 'image'],
+        ['clean']
+      ]
+    }
+  });
+
+  async function logoutAdmin() {
+    try {
+      await fetch('/api/admin-logout', { method: 'POST' });
+    } catch(e) {}
+    window.location.href = '/login.html';
+  }
     placeholder: "Type your custom email here. Use {name} for the teacher's name and {magiclink} to place the portal link.",
     modules: {
       toolbar: [
