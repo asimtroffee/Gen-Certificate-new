@@ -333,36 +333,30 @@ async def create_magic_link(req: CreateLinkRequest):
     teacher_display = req.teacher_name or "Teacher"
 
     html_msg = f"""
-    <p>Hi <strong>{teacher_display}</strong>,</p>
-    <p>Hope you're having a great day! Thanks for helping out with the certificates.</p>
-    <p>Here is your secure "magic link" to access the Certificate Generator portal for your upcoming event, <strong>{event_name}</strong>.</p>
-    <p>👉 <strong><a href="{link_url}">Access Your Portal Here</a></strong></p>
+    <p>Dear Teachers,</p>
+    <p>Thank you for participating in the <strong>{event_name}</strong>! We truly appreciate your time, engagement, and dedication to continuous learning. Your active involvement made the event a resounding success.</p>
     
-    <p><strong>How to generate certificates in 3 easy steps:</strong></p>
+    <p><strong>How to Download Your Certificate</strong></p>
+    <p>Your certificate of completion is now ready. You can easily generate and download it directly from the portal by following these steps:</p>
     <ol>
-        <li>Click the link above to open your personal dashboard.</li>
-        <li>Upload your Excel (<code>.xlsx</code>) file containing the student names.</li>
-        <li>Match your Excel columns to the correct fields, click "Generate", and your certificates will be created instantly!</li>
+        <li><strong>Visit the Portal:</strong> Go to <a href="{link_url}">Your Personal Portal</a>.</li>
+        <li><strong>Enter Your Details:</strong> Type in your Full Name and the School you represent.</li>
+        <li><strong>Download:</strong> Click the Download button, and your certificate will automatically save to your device's downloads folder.</li>
     </ol>
     
-    <p><strong>📝 Important details for your Excel file:</strong><br>
-    To make sure the certificates generate perfectly, please set up your Excel file like this:</p>
-    <ul>
-        <li>Include a header row at the very top (Row 1) with clear titles like <strong>"Name"</strong> and <strong>"School"</strong>.</li>
-        <li>List the actual student information directly below the headers (Row 2, 3, etc).</li>
-        <li>When you upload the file to the portal, you will see a dropdown menu. Make sure to <strong>match the required fields (like Name) with the exact column name</strong> you used in your Excel file!</li>
-        <li>Make sure there are no blank rows between the students.</li>
-    </ul>
+    <p><strong>Note:</strong> Please double-check the spelling of your name and school before submitting to ensure your certificate generates accurately. If you run into any issues accessing the portal or downloading your file, feel free to reply directly to this email or contact us at <a href="mailto:asimiyad.troffee@gmail.com">asimiyad.troffee@gmail.com</a>.</p>
     
-    <p>If you have any questions or if the link expires, just reach out and let us know.</p>
-    <p>Best regards,<br>The Event Team</p>
+    <p>Thank you once again for your commitment to education. We look forward to seeing you at future workshops!</p>
+    <p>Warm regards,<br>The Event Team</p>
     """
+
+    text_body = f"Dear Teachers,\n\nThank you for participating in the {event_name}! We truly appreciate your time, engagement, and dedication to continuous learning. Your active involvement made the event a resounding success.\n\nHow to Download Your Certificate\nYour certificate of completion is now ready. You can easily generate and download it directly from the portal by following these steps:\n\n1. Visit the Portal: Go to {link_url}\n2. Enter Your Details: Type in your Full Name and the School you represent.\n3. Download: Click the Download button, and your certificate will automatically save to your device's downloads folder.\n\nNote: Please double-check the spelling of your name and school before submitting to ensure your certificate generates accurately. If you run into any issues accessing the portal or downloading your file, feel free to reply directly to this email or contact us at asimiyad.troffee@gmail.com.\n\nThank you once again for your commitment to education. We look forward to seeing you at future workshops!\n\nWarm regards,\nThe Event Team"
 
     job = EmailJob(
         to_email=req.teacher_email,
-        subject="Your Magic Link for Generating Certificates! 🎓",
+        subject=f"Thank You for Attending {event_name} | Download Your Certificate",
         html_body=html_msg,
-        text_body=f"""Hi {teacher_display},\n\nHere is your secure link for {event_name}:\n{link_url}\n\nThanks,\nThe Event Team""",
+        text_body=text_body,
         **smtp_cfg,
     )
 
@@ -418,36 +412,30 @@ async def resend_link(req: CreateLinkRequest):
     link_url = f"{base_url}/{html_page}?t={token_val}"
 
     html_msg = f"""
-    <p>Hi <strong>{teacher_name}</strong>,</p>
-    <p>Hope you're having a great day! Thanks for helping out with the certificates.</p>
-    <p>Here is your secure "magic link" to access the Certificate Generator portal for your upcoming event, <strong>{event_name}</strong>.</p>
-    <p>👉 <strong><a href="{link_url}">Access Your Portal Here</a></strong></p>
+    <p>Dear Teachers,</p>
+    <p>Thank you for participating in the <strong>{event_name}</strong>! We truly appreciate your time, engagement, and dedication to continuous learning. Your active involvement made the event a resounding success.</p>
     
-    <p><strong>How to generate certificates in 3 easy steps:</strong></p>
+    <p><strong>How to Download Your Certificate</strong></p>
+    <p>Your certificate of completion is now ready. You can easily generate and download it directly from the portal by following these steps:</p>
     <ol>
-        <li>Click the link above to open your personal dashboard.</li>
-        <li>Upload your Excel (<code>.xlsx</code>) file containing the student names.</li>
-        <li>Match your Excel columns to the correct fields, click "Generate", and your certificates will be created instantly!</li>
+        <li><strong>Visit the Portal:</strong> Go to <a href="{link_url}">Your Personal Portal</a>.</li>
+        <li><strong>Enter Your Details:</strong> Type in your Full Name and the School you represent.</li>
+        <li><strong>Download:</strong> Click the Download button, and your certificate will automatically save to your device's downloads folder.</li>
     </ol>
     
-    <p><strong>📝 Important details for your Excel file:</strong><br>
-    To make sure the certificates generate perfectly, please set up your Excel file like this:</p>
-    <ul>
-        <li>Include a header row at the very top (Row 1) with clear titles like <strong>"Name"</strong> and <strong>"School"</strong>.</li>
-        <li>List the actual student information directly below the headers (Row 2, 3, etc).</li>
-        <li>When you upload the file to the portal, you will see a dropdown menu. Make sure to <strong>match the required fields (like Name) with the exact column name</strong> you used in your Excel file!</li>
-        <li>Make sure there are no blank rows between the students.</li>
-    </ul>
+    <p><strong>Note:</strong> Please double-check the spelling of your name and school before submitting to ensure your certificate generates accurately. If you run into any issues accessing the portal or downloading your file, feel free to reply directly to this email or contact us at <a href="mailto:asimiyad.troffee@gmail.com">asimiyad.troffee@gmail.com</a>.</p>
     
-    <p>If you have any questions or if the link expires, just reach out and let us know.</p>
-    <p>Best regards,<br>The Event Team</p>
+    <p>Thank you once again for your commitment to education. We look forward to seeing you at future workshops!</p>
+    <p>Warm regards,<br>The Event Team</p>
     """
+
+    text_body = f"Dear Teachers,\n\nThank you for participating in the {event_name}! We truly appreciate your time, engagement, and dedication to continuous learning. Your active involvement made the event a resounding success.\n\nHow to Download Your Certificate\nYour certificate of completion is now ready. You can easily generate and download it directly from the portal by following these steps:\n\n1. Visit the Portal: Go to {link_url}\n2. Enter Your Details: Type in your Full Name and the School you represent.\n3. Download: Click the Download button, and your certificate will automatically save to your device's downloads folder.\n\nNote: Please double-check the spelling of your name and school before submitting to ensure your certificate generates accurately. If you run into any issues accessing the portal or downloading your file, feel free to reply directly to this email or contact us at asimiyad.troffee@gmail.com.\n\nThank you once again for your commitment to education. We look forward to seeing you at future workshops!\n\nWarm regards,\nThe Event Team"
 
     job = EmailJob(
         to_email=req.teacher_email,
-        subject="Your Magic Link for Generating Certificates! 🎓",
+        subject=f"Thank You for Attending {event_name} | Download Your Certificate",
         html_body=html_msg,
-        text_body=f"""Hi {teacher_name},\n\nHere is your secure link for {event_name}:\n{link_url}\n\nThanks,\nThe Event Team""",
+        text_body=text_body,
         **smtp_cfg,
     )
 
@@ -528,33 +516,25 @@ async def resend_event_links(req: ResendEventLinksRequest):
             text_body = f"{clean_text}\n\nLink: {link_url}"
         else:
             html_msg = f"""
-            <p>Hi <strong>{teacher_name}</strong>,</p>
-            <p>Hope you're having a great day! Thanks for helping out with the certificates.</p>
-            <p>Here is your secure "magic link" to access the Certificate Generator portal for your upcoming event, <strong>{event_name}</strong>.</p>
-            <p>👉 <strong><a href="{link_url}">Access Your Portal Here</a></strong></p>
+            <p>Dear Teachers,</p>
+            <p>Thank you for participating in the <strong>{event_name}</strong>! We truly appreciate your time, engagement, and dedication to continuous learning. Your active involvement made the event a resounding success.</p>
             
-            <p><strong>How to generate certificates in 3 easy steps:</strong></p>
+            <p><strong>How to Download Your Certificate</strong></p>
+            <p>Your certificate of completion is now ready. You can easily generate and download it directly from the portal by following these steps:</p>
             <ol>
-                <li>Click the link above to open your personal dashboard.</li>
-                <li>Upload your Excel (<code>.xlsx</code>) file containing the student names.</li>
-                <li>Match your Excel columns to the correct fields, click "Generate", and your certificates will be created instantly!</li>
+                <li><strong>Visit the Portal:</strong> Go to <a href="{link_url}">Your Personal Portal</a>.</li>
+                <li><strong>Enter Your Details:</strong> Type in your Full Name and the School you represent.</li>
+                <li><strong>Download:</strong> Click the Download button, and your certificate will automatically save to your device's downloads folder.</li>
             </ol>
             
-            <p><strong>📝 Important details for your Excel file:</strong><br>
-            To make sure the certificates generate perfectly, please set up your Excel file like this:</p>
-            <ul>
-                <li>Include a header row at the very top (Row 1) with clear titles like <strong>"Name"</strong> and <strong>"School"</strong>.</li>
-                <li>List the actual student information directly below the headers (Row 2, 3, etc).</li>
-                <li>When you upload the file to the portal, you will see a dropdown menu. Make sure to <strong>match the required fields (like Name) with the exact column name</strong> you used in your Excel file!</li>
-                <li>Make sure there are no blank rows between the students.</li>
-            </ul>
+            <p><strong>Note:</strong> Please double-check the spelling of your name and school before submitting to ensure your certificate generates accurately. If you run into any issues accessing the portal or downloading your file, feel free to reply directly to this email or contact us at <a href="mailto:asimiyad.troffee@gmail.com">asimiyad.troffee@gmail.com</a>.</p>
             
-            <p>If you have any questions or if the link expires, just reach out and let us know.</p>
-            <p>Best regards,<br>The Event Team</p>
+            <p>Thank you once again for your commitment to education. We look forward to seeing you at future workshops!</p>
+            <p>Warm regards,<br>The Event Team</p>
             """
-            text_body = f"Hi {teacher_name},\n\nHere's your link to generate certificates for {event_name}:\n{link_url}\n\nThanks,\nThe Event Team"
+            text_body = f"Dear Teachers,\n\nThank you for participating in the {event_name}! We truly appreciate your time, engagement, and dedication to continuous learning. Your active involvement made the event a resounding success.\n\nHow to Download Your Certificate\nYour certificate of completion is now ready. You can easily generate and download it directly from the portal by following these steps:\n\n1. Visit the Portal: Go to {link_url}\n2. Enter Your Details: Type in your Full Name and the School you represent.\n3. Download: Click the Download button, and your certificate will automatically save to your device's downloads folder.\n\nNote: Please double-check the spelling of your name and school before submitting to ensure your certificate generates accurately. If you run into any issues accessing the portal or downloading your file, feel free to reply directly to this email or contact us at asimiyad.troffee@gmail.com.\n\nThank you once again for your commitment to education. We look forward to seeing you at future workshops!\n\nWarm regards,\nThe Event Team"
 
-        job_subject = req.custom_subject if (req.email_choice == "custom" and req.custom_subject) else "Your Magic Link for Generating Certificates! 🎓"
+        job_subject = req.custom_subject if (req.email_choice == "custom" and req.custom_subject) else f"Thank You for Attending {event_name} | Download Your Certificate"
 
         jobs.append(EmailJob(
             to_email=teacher_email,
