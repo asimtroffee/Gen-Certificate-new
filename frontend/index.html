@@ -367,11 +367,14 @@
         </div>
       </div>
 
-      <div class="designer-sidebar-footer">
+      <div class="designer-sidebar-footer" style="display:flex; flex-direction:column; gap:8px;">
+        <button class="btn btn-outline" style="width:100%;justify-content:center;color:var(--brand);border-color:var(--brand);" id="btn-preview-cert" onclick="previewCertificate()">
+          <span class="material-symbols-outlined">visibility</span>Preview Certificate
+        </button>
         <button class="btn btn-gold" style="width:100%;justify-content:center;" id="btn-publish" onclick="publishEvent()">
           <span class="material-symbols-outlined">cloud_upload</span><span id="btn-publish-label">Save Event</span>
         </button>
-        <p style="font-size:12px;text-align:center;margin-top:8px;min-height:18px;transition:opacity .2s;" id="publish-status"></p>
+        <p style="font-size:12px;text-align:center;margin-top:2px;min-height:18px;transition:opacity .2s;" id="publish-status"></p>
       </div>
     </div>
 
@@ -1026,7 +1029,82 @@ function loadTemplateFile(file) {
   reader.readAsDataURL(file);
 }
 
+/* ── Preview Certificate ───────────────────────────────── */
+async function previewCertificate() {
+  if (!DS.bgImage) {
+    toast('Please upload a template first', 'error');
+    return;
+  }
+  
+  const f = DS.fields[DS.selectedIdx];
+  if (!f) return;
+
+  const btn = document.getElementById('btn-preview-cert');
+  const originalHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="material-symbols-outlined spin">progress_activity</span>Generating...';
+
+  try {
+    const fd = new FormData();
+    if (DS.uploadedFile) {
+      fd.append('template', DS.uploadedFile);
+    } else {
+      // Fallback: Use the background image from canvas
+      const tempC = document.createElement('canvas');
+      tempC.width = DS.imgW;
+      tempC.height = DS.imgH;
+      tempC.getContext('2d').drawImage(DS.bgImage, 0, 0);
+      const blob = await new Promise(res => tempC.toBlob(res, 'image/png'));
+      fd.append('template', blob, 'template.png');
+    }
+    
+    fd.append('preview_text', f.sample || 'Sample Text');
+    fd.append('font', f.fontFamily || 'Great Vibes');
+    fd.append('font_size', f.fontSize || 72);
+    fd.append('color', f.fontColor || '#1a1a1a');
+    fd.append('alignment', f.textAlign || 'center');
+    fd.append('x', f.x || 50);
+    fd.append('y', f.y || 50);
+
+    const r = await fetch(API_BASE + '/api/preview-template', { method: 'POST', body: fd });
+    if (!r.ok) throw new Error('Preview generation failed');
+    const data = await r.json();
+
+    if (data.ok && data.image) {
+      let previewOverlay = document.getElementById('preview-overlay');
+      if (!previewOverlay) {
+        previewOverlay = document.createElement('img');
+        previewOverlay.id = 'preview-overlay';
+        previewOverlay.style.position = 'absolute';
+        previewOverlay.style.top = '0';
+        previewOverlay.style.left = '0';
+        previewOverlay.style.width = '100%';
+        previewOverlay.style.height = '100%';
+        previewOverlay.style.objectFit = 'contain';
+        previewOverlay.style.zIndex = '10';
+        previewOverlay.style.cursor = 'crosshair';
+        previewOverlay.style.background = 'rgba(255,255,255,0.9)';
+        previewOverlay.title = 'Click to exit preview mode';
+        previewOverlay.onclick = () => {
+          previewOverlay.style.display = 'none';
+          toast('Exited preview mode', 'info');
+        };
+        document.getElementById('canvas-wrapper').appendChild(previewOverlay);
+      }
+      previewOverlay.src = data.image;
+      previewOverlay.style.display = 'block';
+      toast('Preview generated! Click the image to exit.', 'success');
+    }
+  } catch (e) {
+    toast(e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalHtml;
+  }
+}
+
 /* ── Publish ─────────────────────────────────────── */
+
 async function publishEvent() {
   const name = document.getElementById('ev-name').value.trim();
   if (!name) { toast('Please enter an event name', 'error'); return; }

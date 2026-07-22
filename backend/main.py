@@ -200,6 +200,54 @@ async def get_template():
     return Response(content=buf.getvalue(), media_type="image/png")
 
 
+import base64
+
+@app.post("/api/preview-template")
+async def preview_template_api(
+    template: UploadFile = File(...),
+    preview_text: str = Form(...),
+    font: str = Form("Great Vibes"),
+    font_size: int = Form(72),
+    color: str = Form("#1a1a1a"),
+    alignment: str = Form("center"),
+    x: float = Form(50.0),
+    y: float = Form(50.0)
+):
+    try:
+        content = await template.read()
+        img = Image.open(BytesIO(content))
+        
+        from .certificate import generate_certificate
+        
+        config = {
+            "fields": [
+                {
+                    "id": "preview",
+                    "x": x,
+                    "y": y,
+                    "fontFamily": font,
+                    "fontSize": font_size,
+                    "fontColor": color,
+                    "textAlign": alignment
+                }
+            ]
+        }
+        data = {"preview": preview_text}
+        
+        result_bytes = generate_certificate(
+            template=img,
+            config=config,
+            output_format="png",
+            data=data
+        )
+        
+        b64 = base64.b64encode(result_bytes).decode("utf-8")
+        return {"ok": True, "image": f"data:image/png;base64,{b64}"}
+    except Exception as e:
+        raise HTTPException(500, f"Failed to generate preview: {e}")
+
+
+
 @app.post("/api/preview")
 async def preview(req: GenerateRequest):
     """Generate a preview image (returns PNG, always)."""
