@@ -221,16 +221,6 @@
     } catch(e) {}
     window.location.href = '/login.html';
   }
-    placeholder: "Type your custom email here. Use {name} for the teacher's name and {magiclink} to place the portal link.",
-    modules: {
-      toolbar: [
-        ['bold', 'italic', 'underline'],
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-        ['link', 'image'],
-        ['clean']
-      ]
-    }
-  });
   
   function toast(msg, type = 'info') {
     const icons = { success: 'check_circle', error: 'error' };
