@@ -102,6 +102,9 @@
       <p class="page-sub" id="event-subtitle">Loading event...</p>
     </div>
     <div style="display:flex;gap:10px;">
+      <button class="btn btn-outline" onclick="exportCSV()" id="btn-export-csv">
+        <span class="material-symbols-outlined">download</span>Export CSV
+      </button>
       <label class="btn btn-outline" style="cursor:pointer">
         <span class="material-symbols-outlined">upload_file</span>Upload Excel
         <input type="file" id="excel-upload" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleExcelUpload(event)">
@@ -164,7 +167,7 @@
 
   <div class="card">
     <div class="card-header">
-      <div class="card-title">Assigned Teachers</div>
+      <div class="card-title">Assigned Teachers <span style="font-weight:400;font-size:12px;color:var(--gray-500);margin-left:8px;">* Note: 'Export CSV' only downloads currently visible rows based on your active filter.</span></div>
     </div>
     <table>
       <thead>
@@ -498,6 +501,75 @@
       btn.disabled = false;
       btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;">delete</span>';
     }
+  }
+
+  function exportCSV() {
+    if (globalTeachers.length === 0) {
+      toast('No data to export', 'error');
+      return;
+    }
+
+    // Filter rows based on active KPI filter
+    let filtered = globalTeachers;
+    if (currentFilter === 'completed') {
+        filtered = globalTeachers.filter(t => t.status === 'used');
+    } else if (currentFilter === 'bounced') {
+        filtered = globalTeachers.filter(t => t.email_bounced);
+    } else if (currentFilter === 'pending') {
+        filtered = globalTeachers.filter(t => t.status !== 'used' && !t.email_bounced);
+    }
+
+    if (filtered.length === 0) {
+      toast('No matching rows to export', 'error');
+      return;
+    }
+
+    // CSV Headers
+    const headers = ['Teacher Name', 'Email', 'Status', 'Date'];
+    
+    // Robust escaping function for CSV
+    const escapeCSV = (val) => {
+        if (val === null || val === undefined) return '""';
+        let str = String(val);
+        str = str.replace(/"/g, '""'); // Double up quotes
+        return `"${str}"`;
+    };
+
+    // Generate CSV Rows
+    const rows = filtered.map(t => {
+        let statusStr = t.status === 'used' ? 'Completed' : 'Pending';
+        if (t.email_bounced) statusStr = 'Bounced';
+        
+        let dateStr = '';
+        if (t.created_at) {
+            dateStr = new Date(t.created_at).toLocaleDateString();
+        }
+
+        return [
+            escapeCSV(t.teacher_name),
+            escapeCSV(t.teacher_email),
+            escapeCSV(statusStr),
+            escapeCSV(dateStr)
+        ].join(',');
+    });
+
+    const csvContent = [headers.join(','), ...rows].join('\n');
+    
+    // Create Blob & Force Download via hidden <a>
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `teachers_data_${currentFilter}.csv`);
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    toast(`Exported ${filtered.length} rows to CSV`, 'success');
   }
 </script>
 </body>
