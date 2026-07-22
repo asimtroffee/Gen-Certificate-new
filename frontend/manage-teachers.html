@@ -190,6 +190,21 @@ function toast(msg, type = 'info') {
       
       document.getElementById('event-subtitle').textContent = `${teachers.length} total teachers`;
 
+      const bouncedCount = teachers.filter(t => t.email_bounced).length;
+      let alertDiv = document.getElementById('bounce-alert');
+      if (bouncedCount > 0) {
+        if (!alertDiv) {
+            alertDiv = document.createElement('div');
+            alertDiv.id = 'bounce-alert';
+            alertDiv.style.cssText = 'background:var(--red-light); color:#DC2626; padding:12px 16px; border-radius:var(--radius); border:1px solid #FCA5A5; margin-bottom:20px; font-weight:500; display:flex; align-items:center; gap:8px; font-size:14px;';
+            document.querySelector('.page-header').insertAdjacentElement('afterend', alertDiv);
+        }
+        alertDiv.innerHTML = `<span class="material-symbols-outlined">error</span> 🚨 ${bouncedCount} Teachers had bounced emails. Please verify their email addresses.`;
+        alertDiv.style.display = 'flex';
+      } else if (alertDiv) {
+        alertDiv.style.display = 'none';
+      }
+
       const pendingCount = teachers.filter(t => t.status !== 'used').length;
       document.getElementById('btn-email-pending').disabled = pendingCount === 0;
 
@@ -201,9 +216,13 @@ function toast(msg, type = 'info') {
 
       tbody.innerHTML = teachers.map(t => {
         const certCount = t.student_count || 0;
-        const badge = t.status === 'used'
+        let badge = t.status === 'used'
           ? `<span class="badge badge-green"><span class="material-symbols-outlined" style="font-size:12px">check_circle</span>Completed</span>`
           : '<span class="badge badge-gray">Pending</span>';
+          
+        if (t.email_bounced) {
+          badge = `<span class="badge" title="${esc(t.bounce_error)}" style="background:var(--red-light); color:#DC2626; cursor:help;"><span class="material-symbols-outlined" style="font-size:12px">error</span>Bounced</span>`;
+        }
           
         return `<tr>
           <td style="font-weight:600;">${esc(t.teacher_name)}</td>

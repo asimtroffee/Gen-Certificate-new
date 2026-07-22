@@ -63,6 +63,8 @@ USING (true);
 -- Migration: Add school and completed_at to teacher_links (added 2026-07-21)
 ALTER TABLE public.teacher_links ADD COLUMN IF NOT EXISTS school TEXT;
 ALTER TABLE public.teacher_links ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE public.teacher_links ADD COLUMN IF NOT EXISTS email_bounced BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.teacher_links ADD COLUMN IF NOT EXISTS bounce_error TEXT;
 
 
 -- 3. Create certificates table

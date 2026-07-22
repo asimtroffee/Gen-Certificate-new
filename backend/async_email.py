@@ -52,6 +52,7 @@ class EmailJob:
     smtp_port: int = 465
     smtp_secure: bool = True
     sender_name: str = ""
+    metadata: dict = field(default_factory=dict)
 
 
 def _build_message(job: EmailJob) -> MIMEMultipart:
