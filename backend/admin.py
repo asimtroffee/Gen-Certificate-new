@@ -73,32 +73,18 @@ def _get_public_url(client) -> str:
 
 
 async def _handle_bounce(job, exc):
-    import aiosmtplib
-    try:
-        from botocore.exceptions import ClientError
-    except ImportError:
-        ClientError = type("ClientError", (Exception,), {})
-        
-    is_bounce = False
     error_msg = str(exc)
-    
-    if isinstance(exc, aiosmtplib.SMTPRecipientsRefused):
-        is_bounce = True
-    elif isinstance(exc, aiosmtplib.SMTPResponseException):
-        if 400 <= exc.code < 600:
-            is_bounce = True
-    elif isinstance(exc, ClientError):
-        is_bounce = True
-
-    if is_bounce:
-        token = job.metadata.get("token")
-        if token:
-            client = get_client()
-            if client:
+    token = job.metadata.get("token")
+    if token:
+        client = get_client()
+        if client:
+            try:
                 client.table("teacher_links").update({
                     "email_bounced": True,
                     "bounce_error": error_msg[:500]
                 }).eq("token", token).execute()
+            except Exception as e:
+                print(f"[handle_bounce] Supabase update error: {e}")
 
 
 async def _background_bulk_email(jobs: list, event_id: str):
@@ -396,15 +382,13 @@ async def create_magic_link(req: CreateLinkRequest):
     try:
         await send_single_email_async(job)
     except Exception as e:
-        import aiosmtplib
-        is_bounce = False
-        if isinstance(e, aiosmtplib.SMTPRecipientsRefused) or (isinstance(e, aiosmtplib.SMTPResponseException) and 400 <= getattr(e, 'code', 0) < 600):
-            is_bounce = True
-        if is_bounce:
+        try:
             client.table("teacher_links").update({
                 "email_bounced": True,
                 "bounce_error": str(e)[:500]
             }).eq("token", token_val).execute()
+        except Exception:
+            pass
         raise HTTPException(500, f"Link created but email failed: {e}")
 
     return {"ok": True, "token": token_val, "message": f"Link sent to {req.teacher_email}"}
@@ -484,15 +468,13 @@ async def resend_link(req: CreateLinkRequest):
     try:
         await send_single_email_async(job)
     except Exception as e:
-        import aiosmtplib
-        is_bounce = False
-        if isinstance(e, aiosmtplib.SMTPRecipientsRefused) or (isinstance(e, aiosmtplib.SMTPResponseException) and 400 <= getattr(e, 'code', 0) < 600):
-            is_bounce = True
-        if is_bounce:
+        try:
             client.table("teacher_links").update({
                 "email_bounced": True,
                 "bounce_error": str(e)[:500]
             }).eq("token", token_val).execute()
+        except Exception:
+            pass
         raise HTTPException(500, f"Email failed: {e}")
 
     return {"ok": True, "token": token_val, "message": f"Link resent to {req.teacher_email}"}
