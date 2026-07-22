@@ -85,6 +85,8 @@
   .toast-error{background:#fff;border-left:4px solid var(--red);color:var(--gray-800);}
   .toast .material-symbols-outlined{font-size:18px;}
   @keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+  .spin { animation: spin 1s linear infinite; }
+  @keyframes spin { 100% { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -171,10 +173,11 @@
           <th>Email</th>
           <th>Status</th>
           <th>Students</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody id="teachers-tbody">
-        <tr><td colspan="4" style="text-align:center;padding:24px;color:var(--gray-400)">Loading...</td></tr>
+        <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--gray-400)">Loading...</td></tr>
       </tbody>
     </table>
   </div>
@@ -326,7 +329,7 @@
   function renderTable() {
     const tbody = document.getElementById('teachers-tbody');
     if (globalTeachers.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--gray-400)">No teachers assigned yet. Upload an Excel file.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--gray-400)">No teachers assigned yet. Upload an Excel file.</td></tr>';
       return;
     }
 
@@ -340,7 +343,7 @@
     }
 
     if (filtered.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--gray-400)">No teachers match this filter.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--gray-400)">No teachers match this filter.</td></tr>';
       return;
     }
 
@@ -359,6 +362,11 @@
         <td style="color:var(--gray-500)">${esc(t.teacher_email)}</td>
         <td>${badge}</td>
         <td style="color:var(--gray-500);font-weight:500">${certCount}</td>
+        <td>
+          <button class="btn btn-sm btn-outline text-red" onclick="deleteTeacher('${t.id}', this)" title="Delete Teacher" style="border-color:var(--red-light); color:var(--red); padding:4px 8px; margin:0;">
+            <span class="material-symbols-outlined" style="font-size:16px;">delete</span>
+          </button>
+        </td>
       </tr>`;
     }).join('');
   }
@@ -455,6 +463,40 @@
       btn.disabled = false;
     } finally {
       btn.innerHTML = '<span class="material-symbols-outlined">mail</span>Email Pending';
+    }
+  }
+
+  async function deleteTeacher(teacherId, btn) {
+    if (!confirm("Are you sure you want to remove this teacher?")) return;
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined spin" style="font-size:16px;">progress_activity</span>';
+
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/events/${eventId}/teacher/${teacherId}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Failed to delete teacher');
+      
+      toast(data.message || "Teacher deleted successfully", 'success');
+      
+      // Remove from global array
+      globalTeachers = globalTeachers.filter(t => t.id !== teacherId);
+      
+      // Remove from DOM immediately
+      const tr = btn.closest('tr');
+      if (tr) tr.remove();
+      
+      // Recalculate KPIs
+      updateKPIs();
+      
+      if (globalTeachers.length === 0) renderTable();
+
+    } catch (err) {
+      toast(err.message, 'error');
+      btn.disabled = false;
+      btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;">delete</span>';
     }
   }
 </script>

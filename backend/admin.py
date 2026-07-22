@@ -253,6 +253,26 @@ async def event_teachers(event_id: str):
     return {"teachers": result, "total": len(result)}
 
 
+@router.delete("/events/{event_id}/teacher/{teacher_id}")
+async def delete_teacher(event_id: str, teacher_id: str):
+    """Delete a teacher from the event."""
+    client = get_client()
+    if client is None:
+        raise HTTPException(500, "Supabase not configured")
+
+    # Verify teacher exists
+    teacher_res = client.table("teacher_links").select("id").eq("id", teacher_id).eq("event_id", event_id).execute()
+    if not teacher_res.data:
+        raise HTTPException(404, "Teacher not found")
+
+    try:
+        client.table("teacher_links").delete().eq("id", teacher_id).execute()
+    except Exception as e:
+        raise HTTPException(500, f"Failed to delete teacher: {e}")
+
+    return {"ok": True, "message": "Teacher deleted successfully"}
+
+
 from fastapi import UploadFile, File
 import openpyxl
 from io import BytesIO
